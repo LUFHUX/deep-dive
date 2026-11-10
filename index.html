@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050b14">
+<title>深潜</title>
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+
+<div id="banner-layer" class="banner-layer"></div>
+<div id="fatal-bar" class="fatal-bar" hidden></div>
+
+<div class="app">
+
+  <header class="hud">
+    <div class="stat depth">
+      <span class="k" id="depth-label">深度</span>
+      <span class="v" id="stat-depth">1</span>
+    </div>
+    <div class="stat">
+      <span class="k" id="mine-label">未探明暗礁</span>
+      <span class="v" id="stat-mines">10</span>
+    </div>
+
+    <div class="stat bottles" id="stat-bottle-box">
+      <span class="k" id="bottle-label">未开启氧气瓶</span>
+      <span class="k2" id="bottle-sub"></span>
+      <span class="vwrap">
+        <span class="v" id="stat-bottle">0</span>
+        <span class="extra" id="stat-extra" hidden></span>
+      </span>
+    </div>
+
+    <div class="stat oxy" id="stat-oxy-box">
+      <span class="k" id="oxy-label">氧气</span>
+      <span class="bar" id="oxy-bar"><i id="oxy-fill"></i></span>
+      <span class="v" id="stat-oxy">100</span>
+    </div>
+  </header>
+
+  <div class="hintbar" id="hintbar" hidden>
+    <span id="hinttext"></span>
+
+    <button class="hintbar-close" id="hint-close" title="收起">✕</button>
+  </div>
+
+  <main class="board-wrap">
+    <div class="board-scroll" id="board-scroll">
+    <div class="board" id="board"></div>
+  </div>
+    <div class="overlay" id="overlay" hidden>
+      <div class="overlay-card">
+        <div class="overlay-title" id="overlay-title"></div>
+        <div class="overlay-body" id="overlay-body"></div>
+        <button class="btn primary" id="overlay-restart">再来一次</button>
+      </div>
+    </div>
+
+    <!-- 结算界面：通关 / 失败共用骨架，skin 区分 -->
+    <div class="result-layer" id="result-layer" hidden>
+      <div class="result-particles" id="result-particles"></div>
+      <div class="result-card">
+        <div class="result-head">
+          <div class="result-kicker" id="result-kicker"></div>
+          <div class="result-title" id="result-title"></div>
+          <div class="result-badge" id="result-badge" hidden></div>
+        </div>
+        <div class="result-rows" id="result-rows"></div>
+        <div class="result-actions">
+          <button class="btn primary" id="result-primary" type="button">保存这张图</button>
+          <button class="btn" id="result-home" type="button">返回首页</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <div class="hint">
+      <span class="r">红</span>暗礁　<span class="b">蓝</span>氧气瓶　<span class="m">紫</span>混合<br>
+      点一下翻开　<span class="k">长按</span>标记暗礁<br>
+
+    </div>
+    <div class="meta">
+      <span class="seed" id="seed"></span>
+      <button class="btn hint" id="hint-btn">提示 −6</button>
+      <button class="btn" id="restart">重新下潜</button>
+    </div>
+  </footer>
+
+</div>
+
+<noscript>
+  <p style="color:#cfe3f5;text-align:center">这个原型需要开启 JavaScript。</p>
+</noscript>
+
+
+  <!-- 首页：启动后的第一屏 -->
+  <div class="home-layer" id="home-layer">
+    <div class="home-inner">
+      <header class="home-head">
+        <h1 class="home-title">深潜</h1>
+        <p class="home-sub">一片等你探索的未知海域</p>
+      </header>
+
+      <section class="home-actions">
+        <button class="btn primary home-main" id="home-start" data-home-action="start" type="button">开始下潜</button>
+        <button class="home-link" id="home-restart" data-home-action="restart" type="button" hidden>重新开始</button>
+
+        <div class="home-mode" id="home-mode" data-home-action="mode">
+          <span>经典模式（100% 纯推理可解）</span><span class="home-caret">▾</span>
+        </div>
+
+        <button class="btn home-tut" id="home-tutorial" data-home-action="tutorial" type="button">新手教学</button>
+        <p class="home-note">第一次玩，建议先看</p>
+      </section>
+
+      <section class="home-records">
+        <div class="home-rec"><span>最深</span><b id="home-rec-depth">第 0 层</b></div>
+        <div class="home-rec"><span>累计</span><b id="home-rec-total">0 个氧气瓶</b></div>
+        <div class="home-rec"><span>通关</span><b id="home-rec-clear">0 次</b></div>
+        <div class="home-rec"><span>游戏时长</span><b id="home-rec-time">0 秒</b></div>
+      </section>
+
+      <footer class="home-foot">
+        <button class="home-foot-btn home-foot-main" data-home-action="settings" type="button">设置</button>
+        <button class="home-foot-btn" data-home-action="feedback" type="button">反馈</button>
+        <button class="home-foot-btn" data-home-action="about" type="button">关于</button>
+      </footer>
+    </div>
+  </div>
+
+<script src="logic.js"></script>
+<script src="solver.js"></script>
+<script src="generator.js"></script>
+<script src="hint.js"></script>
+<script src="mode.js"></script>
+  <script src="calib.js"></script>
+  <script src="shape.js"></script>
+  <script src="ladder.js"></script>
+  <script src="tutorial.js"></script>
+  <script src="modifiers.js"></script>
+<script src="run.js"></script>
+<script src="ui.js"></script>
+<script src="result.js"></script>
+<script src="poster.js"></script>
+<script src="boards.js"></script>
+  <script src="boards-picked.js"></script>
+  <script src="main.js"></script>
+
+  <div id="confirm-dive" class="confirm-layer" hidden>
+    <div class="confirm-box">
+      <p class="confirm-title">已找到出口</p>
+      <p class="confirm-sub">下潜进入下一层，或者继续探索捞氧气</p>
+      <div class="confirm-actions">
+        <button class="btn primary" id="confirm-yes">下潜</button>
+        <button class="btn" id="confirm-no">继续探索</button>
+      </div>
+    </div>
+  </div>
+  <div class="tut-layer" id="tut-layer" hidden>
+    <div class="tut-fab-wrap">
+      <button class="btn tut-hint-fab" id="tut-hint-fab" type="button">提示 −6</button>
+    </div>
+    <div class="tut-bar">
+      <div class="tut-head">
+        <span class="tut-step" id="tut-step">1 / 10</span>
+        <button class="tut-skip" id="tut-skip">跳过</button>
+      </div>
+      <p class="tut-text" id="tut-text"></p>
+      <p class="tut-sub" id="tut-sub"></p>
+      <p class="tut-hint" id="tut-hint"></p>
+    </div>
+  </div>
+  <div class="tut-final" id="tut-final" hidden>
+    <div class="tut-final-card">
+      <h2>开始下潜</h2>
+      <p>经典模式 <b>100% 只用逻辑推理就能解开，绝不会让你猜</b>。潜得越深，氧气越紧，但每一格都有答案。</p>
+      <div class="tut-final-actions">
+        <button class="btn" id="tut-final-home" type="button">回到首页</button>
+        <button class="btn primary" id="tut-final-go" type="button">开始下潜</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

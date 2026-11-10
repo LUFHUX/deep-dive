@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>深潜 · 逻辑层自检</title>
+<style>
+  body {
+    margin: 0; padding: 28px 22px;
+    background: #050b14; color: #cfe3f5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-size: 14px; line-height: 1.7;
+  }
+  h1 { font-size: 17px; margin: 0 0 4px; letter-spacing: .04em; }
+  .sub { color: #5f7c99; font-size: 12px; margin-bottom: 20px; }
+  .row { display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px solid rgba(120,170,220,.09); }
+  .mark { flex: 0 0 52px; font-weight: 700; font-size: 12px; letter-spacing: .06em; }
+  .pass { color: #63e0c4; }
+  .fail { color: #ff6b6b; }
+  .name { flex: 1; }
+  .note { flex: 0 0 auto; color: #5f7c99; font-size: 12px; }
+  .sum { margin-top: 22px; font-size: 15px; font-weight: 700; }
+  .sum.ok { color: #63e0c4; }
+  .sum.bad { color: #ff6b6b; }
+  .back { display: inline-block; margin-top: 20px; color: #5cc8ff; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<h1>深潜 · 逻辑层自检</h1>
+<div class="sub">只测规则，不测手感。好不好玩是许力文玩出来的，不是测出来的。</div>
+
+<div id="out"></div>
+<div id="sum" class="sum"></div>
+<a class="back" href="index.html">← 回到游戏</a>
+
+<script src="logic.js"></script>
+<script src="solver.js"></script>
+<script src="generator.js"></script>
+<script src="selftest.js"></script>
+<script>
+(function () {
+  var out = document.getElementById('out');
+  var report = DeepDiveTests.run();
+
+  for (var i = 0; i < report.results.length; i++) {
+    var r = report.results[i];
+    var row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML =
+      '<span class="mark ' + (r.ok ? 'pass' : 'fail') + '">' + (r.ok ? 'PASS' : 'FAIL') + '</span>' +
+      '<span class="name">' + r.name + '</span>' +
+      '<span class="note">' + (r.note || '') + '</span>';
+    out.appendChild(row);
+  }
+
+  var sum = document.getElementById('sum');
+  sum.className = 'sum ' + (report.failed ? 'bad' : 'ok');
+  sum.textContent = report.passed + ' / ' + report.total + ' 通过' +
+    (report.failed ? '，' + report.failed + ' 项失败' : '');
+})();
+</script>
+
+</body>
+</html>
