@@ -22,19 +22,19 @@ var DeepDiveLadder = (function () {
   };
 
   var BANDS = [
-    { from: 1,  to: 10, sizes: ['6x6', '6x7'],   mines: [3, 4],   chests: 4,  damage: 20, supply: 7, hitDivisor: 4 },
-    { from: 11, to: 20, sizes: ['7x7', '7x8'],   mines: [6, 7],   chests: 5,  damage: 20, supply: 13, hitDivisor: 4 },
-    { from: 21, to: 30, sizes: ['8x8', '8x9'],   mines: [8, 9],   chests: 6,  damage: 24, supply: 22, hitDivisor: 4 },
-    { from: 31, to: 40, sizes: ['9x9', '9x10'],  mines: [10, 11], chests: 8,  damage: 24, supply: 24, hitDivisor: 4 },
-    { from: 41, to: 50, sizes: ['9x11', '8x12'], mines: [11, 12], chests: 8,  damage: 28, supply: 36, hitDivisor: 3 },
-    { from: 51, to: 60, sizes: ['8x12', '7x14'], mines: [12, 12], chests: 9,  damage: 28, supply: 37, hitDivisor: 3 },
-    { from: 61, to: 70, sizes: ['10x20'],        mines: [22, 24], chests: 18, damage: 28, supply: 37, hitDivisor: 3 },
-    { from: 71, to: 80, sizes: ['7x14', '6x16'], mines: [12, 13], chests: 8,  damage: 32, supply: 42, hitDivisor: 2 },
-    { from: 81, to: 90, sizes: ['5x20', '6x16'], mines: [13, 13], chests: 8,  damage: 32, supply: 59, hitDivisor: 2 },
-    { from: 91, to: 99, sizes: ['10x10', '9x11'], mines: [14, 16], chests: 9, damage: 36, supply: 64, hitDivisor: 1 }
+    { from: 1,  to: 10, sizes: ['6x6', '6x7'],   mines: [3, 4],   chests: 4,  hitDivisor: 5 },
+    { from: 11, to: 20, sizes: ['7x7', '7x8'],   mines: [6, 7],   chests: 5,  hitDivisor: 4 },
+    { from: 21, to: 30, sizes: ['8x8', '8x9'],   mines: [8, 9],   chests: 6,  hitDivisor: 4 },
+    { from: 31, to: 40, sizes: ['9x9', '9x10'],  mines: [10, 11], chests: 8,  hitDivisor: 3 },
+    { from: 41, to: 50, sizes: ['9x11', '8x12'], mines: [11, 12], chests: 8,  hitDivisor: 3 },
+    { from: 51, to: 60, sizes: ['8x12', '7x14'], mines: [12, 12], chests: 9,  hitDivisor: 3 },
+    { from: 61, to: 70, sizes: ['10x20'],        mines: [22, 24], chests: 18, hitDivisor: 2 },
+    { from: 71, to: 80, sizes: ['7x14', '6x16'], mines: [12, 13], chests: 8,  hitDivisor: 2 },
+    { from: 81, to: 90, sizes: ['5x20', '6x16'], mines: [13, 13], chests: 8,  hitDivisor: 2 },
+    { from: 91, to: 99, sizes: ['10x10', '9x11'], mines: [14, 16], chests: 9, hitDivisor: 1 }
   ];
 
-  var FINAL = { cols: 9, rows: 9, mines: 13, chests: 8, damage: 36, supply: 8 };
+  var FINAL = { cols: 9, rows: 9, mines: 13, chests: 8, hitDivisor: 1 };
 
   var PRESSURE_NAMES = {
     none: '无',
@@ -137,7 +137,7 @@ var DeepDiveLadder = (function () {
         depth: 100,
         cols: FINAL.cols, rows: FINAL.rows,
         mines: FINAL.mines, chests: FINAL.chests,
-        damage: FINAL.damage, step: FINAL.step, supply: FINAL.supply,
+        hitDivisor: FINAL.hitDivisor,
         pressure: 'none', pressureName: '无（纯推理）',
         shape: null, seed: seed
       };
@@ -174,7 +174,7 @@ var DeepDiveLadder = (function () {
       depth: depth,
       cols: wh[0], rows: wh[1],
       mines: mines, chests: chests,
-      damage: band.damage, step: step, supply: band.supply,
+      hitDivisor: band.hitDivisor,
       pressure: pressure,
       pressureName: PRESSURE_NAMES[pressure] || pressure,
       shape: shape,

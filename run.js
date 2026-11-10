@@ -28,12 +28,15 @@ var DeepDiveRun = (function () {
     seed = (seed >>> 0) || 1;
     var lv = DeepDiveLadder.levelFor(depth, seed);
 
+    /* 步成本四档；补给 = 步成本 × 10 */
+    var stepCost = depth <= 25 ? 1 : (depth <= 50 ? 2 : (depth <= 75 ? 3 : 4));
+
     var base = {
       cols: lv.cols,
       rows: lv.rows,
       mines: lv.mines,
       chests: lv.chests,
-      chestOxy: lv.supply,
+      chestOxy: stepCost * 10,
       /* 阶梯表只管尺寸/暗礁/箱/配额/补给；炸弹相关先给基准值再叠修饰符 */
     };
     if (mods) { DeepDiveModifiers.apply(base, mods); }
@@ -56,13 +59,8 @@ var DeepDiveRun = (function () {
       oxygen: oxygen,
       /* v22：肺活量随深度增长 —— 每层上限 = 100 + 深度 */
       oxygenCap: 100 + Math.min(Math.max(depth - 1, 0), 50),
-      /* v29：步成本四档 */
-      stepCost: (function (d) {
-        if (d <= 25) { return 1; }
-        if (d <= 50) { return 2; }
-        if (d <= 75) { return 3; }
-        return 4;
-      })(depth),
+      /* v29：步成本四档（上面已算好） */
+      stepCost: stepCost,
       /* v29：伤害 = round(本层上限 ÷ N)，N 来自 ladder 的 hitDivisor；第 100 关写死 150 */
       mineCost: (function (d) {
         if (d >= 100) { return 150; }
