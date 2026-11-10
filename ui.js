@@ -265,7 +265,7 @@ var DeepDiveUI = (function () {
         text = '';
       } else if (state.marks[i]) {
         cls += ' marked';
-        text = '✕';
+      text = '';
       }
 
       /*
