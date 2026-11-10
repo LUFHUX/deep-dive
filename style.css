@@ -1250,6 +1250,7 @@ html, body {
   outline: 2px solid #ffd86b;
   outline-offset: 2px;
   box-shadow: 0 0 14px rgba(255,216,107,.45);
+  animation: tut-target .9s ease-in-out infinite;
 }
 
 /* 教学结尾弹框 */
@@ -1325,15 +1326,16 @@ body.tut-on.tut-hud #hint-btn {
   box-shadow: 0 0 14px rgba(255,216,107,.5);
 }
 .tut-hud-hi-btn {
-  outline: 2px solid #ffd86b !important;
+  outline: 2px solid #ffd86b;
   outline-offset: 2px;
-  box-shadow: 0 0 14px rgba(255,216,107,.55) !important;
+  box-shadow: 0 0 14px rgba(255,216,107,.55);
+  animation: tut-target .9s ease-in-out infinite;
 }
 
 /* 色盲提示时指向棋盘数字的框：加粗一点，确保看得见 */
 .cell.tut-cb { z-index: 3; position: relative; }
 
-/* 教学浮动「提示 −6」：固定在文字条上方、棋盘下方 */
+/* 教学浮动「提示 剩N次」：固定在文字条上方、棋盘下方 */
 .tut-fab-wrap {
   display: none;
   justify-content: center;
@@ -1341,16 +1343,11 @@ body.tut-on.tut-hud #hint-btn {
 }
 body.tut-hud .tut-fab-wrap { display: flex; }
 .tut-hint-fab {
+  /* 外形完全走 .btn，这里只负责教学高亮 */
   pointer-events: auto;
   outline: 2px solid #ffd86b;
   outline-offset: 2px;
   box-shadow: 0 0 14px rgba(255,216,107,.55);
-  background: #16283a;
-  color: #eaf6ff;
-  border: 1px solid rgba(255,216,107,.6);
-  border-radius: 10px;
-  padding: 8px 18px;
-  font: 700 13px/1 sans-serif;
 }
 /* 第 6 屏底部行不用再显示东西 */
 body.tut-on.tut-hud .foot { display: none !important; }
@@ -1838,3 +1835,5 @@ body.tut-on.tut-hud .foot { display: none !important; }
   left: 50%;
   transform: translateX(-50%);
 }
+
+.btn.disabled { opacity: .45; cursor: not-allowed; }

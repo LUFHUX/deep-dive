@@ -136,14 +136,6 @@ var DeepDiveUI = (function () {
 
   /* 每次渲染都按当前容器重算尺寸 */
   function render(state) {
-    /* 提示价格 = 本层步成本 × 6，每次渲染都刷新按钮文案 */
-    if (state && state.cfg) {
-      var costNow = (state.cfg.stepCost || 1) * 6;
-      ['hint-btn', 'tut-hint-fab'].forEach(function (id) {
-        var el = $(id);
-        if (el) { el.textContent = '提示 −' + costNow; }
-      });
-    }
     if (state && state.cfg && boardEl) {
       fitBoard(boardEl, state.cfg.cols, state.cfg.rows);
       /* 布局稳定后再算一次：首次测量时容器高度可能还没定 */
@@ -959,14 +951,17 @@ function clearHint() {
     toast: toast,
     setDepth: setDepth,
     oxyFloat: oxyFloat,
-    previewHintCost: function () {
-      var c = (typeof DeepDiveRun !== 'undefined' && DeepDiveRun.HINT_COST) ? DeepDiveRun.HINT_COST : 4;
-      oxyFloat('之后每次 −' + c, false, 'hint');
-    },
     setHintLeft: function (n) {
+      var left = (typeof n === 'number') ? n : 0;
+      var text = left > 0 ? ('提示 剩' + left + '次') : '提示 次数用完';
       var b = $('hint-btn');
-      if (!b) { return; }
-      b.textContent = '提示';
+      if (b) {
+        b.textContent = text;
+        if (left > 0) { b.classList.remove('disabled'); b.disabled = false; }
+        else { b.classList.add('disabled'); b.disabled = true; }
+      }
+      var f = $('tut-hint-fab');
+      if (f) { f.textContent = text; }
     },
     isAnimating: isAnimating,
     markReveal: markReveal,

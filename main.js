@@ -86,7 +86,6 @@
   document.addEventListener('visibilitychange', function () {
     if (document.visibilityState === 'hidden') { activePause(); } else { activeResume(); }
   });   /* 'playing' | 'cleared' | 'ended' */
-  var hintCostWarned = false;
 
   /* ---------- 存档 ---------- */
 
@@ -436,7 +435,6 @@
     run.bottles = 0;
     run.hits = 0;
     activeSince = Date.now();
-    hintCostWarned = false;
     saveRun();
     document.getElementById('seed').textContent = '';
     startLevel();
@@ -639,6 +637,7 @@
     TUT_BACKUP_RECORDS = JSON.parse(JSON.stringify(records));
     dlog('[TUT] 备份时 board=' + (state && state.board ? '有' : 'null') + ' seed=' + (state && state.seed));
     if (U.setDepth) { U.setDepth(1); }   /* 教学里显示第 1 层 */
+    if (U.setHintLeft) { U.setHintLeft(3); }   /* 教学固定显示剩 3 次，不消耗 */
     TUT_MODE = true;
     if (document.body) { document.body.classList.add('tut-on'); }
     /* 文字条要跟着棋盘走：把它挪进 .app 的流里 */
@@ -1101,20 +1100,12 @@
     /* 清上一次的高亮 —— 清在这里，而不是动画结束时 */
     U.clearHint();
 
-    /* 先扣费再给提示：提示永远消耗固定氧气，不因"没算出来"而免费 */
-    var cost = (state && state.practice) ? 0 : R.hintCost(run, state && state.cfg);
-    var before = state.oxygen;
-    if (cost > 0) {
-      var paid = L.spendHint(state, cost);
-      if (!paid) { return; }
-      state = paid.state;
-      U.render(state);
-      U.playEvents(paid.events);
-      run.oxygen = state.oxygen;
-      saveRun();
-    }
-    dlog('[HINT] 点前=' + before + ' 点后=' + state.oxygen);
-    if (state.status !== L.PLAYING) { settleLevel(); return; }
+    /* 每局 3 次，不扣氧气；用完点不动 */
+    if (!run || !(run.hintsLeft > 0)) { U.toast('提示次数用完了'); return; }
+    run.hintsLeft = Math.max(0, run.hintsLeft - 1);
+    saveRun();
+    U.setHintLeft(run.hintsLeft);
+    dlog('[HINT] 剩余次数=' + run.hintsLeft + ' 氧气=' + state.oxygen);
 
     var plan = H.findPlan(state);
     if (!plan) {
@@ -1129,7 +1120,7 @@
   }
 
   /*
-   * 提示（−6 点）：和提示不同，它**直接给答案**。
+   * 提示（每局 3 次，不扣氧）：和提示不同，它**直接给答案**。
    * 优先提示求解器能证明安全的；证明不出来就随便提示 —— 这是它便宜不了的理由。
    */
   /* ---------- 试玩盘（?board=1..5，只给人工试玩用） ---------- */

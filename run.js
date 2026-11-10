@@ -17,7 +17,7 @@ var DeepDiveRun = (function () {
   var MINE_COST = 10;
   var STEP_COST = 2;
   var HINT_COST = 4;   /* 提示：教你怎么看 */
-    var FREE_HINTS = 0;   /* 已取消免费次数（保留常量以免旧存档字段报错） */
+    var HINT_LIMIT = 3;   /* 每局提示次数（不消耗氧气） */
 
   /* 第 n 层用什么配置铺盘 */
   /*
@@ -90,7 +90,7 @@ var DeepDiveRun = (function () {
     cellsOpened: 0,
     bottles: 0,
     hits: 0,
-      hintsLeft: FREE_HINTS,
+      hintsLeft: HINT_LIMIT,
       seed: (seed >>> 0) || 1,
       mods: DeepDiveModifiers.emptyStacks(),
       modsDrawn: 0          /* 已经抽到第几关；存档回来不会重复抽 */
@@ -114,7 +114,7 @@ var DeepDiveRun = (function () {
       depth: run.depth + 1,
       oxygen: left,
       totalCollected: run.totalCollected + collected,
-      hintsLeft: typeof run.hintsLeft === 'number' ? run.hintsLeft : FREE_HINTS
+      hintsLeft: typeof run.hintsLeft === 'number' ? run.hintsLeft : HINT_LIMIT
     });
   }
 
@@ -127,7 +127,7 @@ var DeepDiveRun = (function () {
     var next = Object.assign({}, run, {
       oxygen: left,
       totalCollected: run.totalCollected + collected,
-      hintsLeft: typeof run.hintsLeft === 'number' ? run.hintsLeft : FREE_HINTS
+      hintsLeft: typeof run.hintsLeft === 'number' ? run.hintsLeft : HINT_LIMIT
     });
 
     if (level.perfect) {
@@ -144,11 +144,6 @@ var DeepDiveRun = (function () {
    * 提示的费用（v11）：每大局前 3 次免费，之后每次 5。
    * 计数在 run 上，不随层重置 —— 换层不会白送你三次。
    */
-  function hintCost(run, cfg) {
-    /* 提示价 = 本层步成本 × 6（第 1 层 6 点，深了更贵） */
-    var step = (cfg && cfg.stepCost) ? cfg.stepCost : 1;
-    return step * 6;
-  }
 
   /*
    * 进关前把本关的修饰符抽出来（可复现：run.seed + depth）。
@@ -197,8 +192,7 @@ var DeepDiveRun = (function () {
     MINE_COST: MINE_COST,
     STEP_COST: STEP_COST,
     HINT_COST: HINT_COST,
-    FREE_HINTS: FREE_HINTS,
-    hintCost: hintCost,
+    HINT_LIMIT: HINT_LIMIT,
     dive: dive,
     drawModsIfNeeded: drawModsIfNeeded,
     configFor: configFor,

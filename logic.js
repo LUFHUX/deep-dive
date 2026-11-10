@@ -543,19 +543,6 @@ var DeepDiveLogic = (function () {
    * 提示的扣费（v11）。只有真的产出信息才该扣 —— 空提示不扣（DESIGN 规则 6）。
    * 付不起就返回 null，调用方自己决定怎么提示玩家。
    */
-  function spendHint(state, cost) {
-    if (state.status !== PLAYING) { return null; }
-    if (state.oxygen < cost) { return null; }
-    var next = cloneState(state);
-    next.oxygen = Math.max(0, next.oxygen - cost);
-    var events = [{ type: 'hint-cost', cost: cost, oxygen: next.oxygen }];
-    var st = evaluate(next);
-    if (st === ENDED) {
-      next.status = ENDED;
-      events.push({ type: 'end' });
-    }
-    return { state: next, events: events };
-  }
 
   /* ---------- 暗礁标记（v0.5.1 规则第 7 条） ---------- */
 
@@ -642,7 +629,6 @@ var DeepDiveLogic = (function () {
     doorFor: doorFor,
     RARE_MULT: RARE_MULT,
     openCell: openCell,
-    spendHint: spendHint,
     canAct: canAct,
     toggleMark: toggleMark,
     autoClearCheck: autoClearCheck,

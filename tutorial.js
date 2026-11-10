@@ -187,7 +187,7 @@
     {
       id: 'hud-tour',
       kind: 'act',
-      text: '这是氧气条，氧气耗尽则本局游戏结束。每点开一格消耗氧气，越深消耗越多；撞上暗礁会掉一大截。',
+      text: '这是氧气条，氧气耗尽则本局游戏结束。每点开一格消耗氧气，越深消耗越多；会大量消耗氧气。',
       sub: '推理遇到困难时，可点击提示打开一格，每次消耗氧气。',
       cols: 5, rows: 5,
       cells: (function () { var c = []; for (var i = 0; i < 25; i++) { c.push(EMPTY); } return c; })(),
@@ -197,11 +197,11 @@
       oxygen: 40,
       mission: 'hud-steps',
       steps: [
-        { target: '.stat.depth', text: '这是潜水深度。打通 100 层，就能登顶。' },
+        { target: '.stat.depth', text: '这是潜水深度。打通 100 层，就能到达海底。' },
         { target: '#stat-mines-box', text: '这是未探明暗礁：斜杠前面是还没被点开的暗礁数，后面是本层暗礁总数。它有时能帮你推理。' },
         { target: '.stat.bottles', text: '这是未开启氧气瓶：这一层还剩几个氧气瓶没找到。' },
         { target: '.stat.oxy', text: '这是氧气条，氧气耗尽则本局游戏结束。每点开一格消耗氧气，越深消耗越多；撞上暗礁会掉一大截。' },
-        { target: '#tut-hint-fab', text: '这是提示。推理遇到困难时，点它可以打开一格，每次消耗氧气。', fab: true }
+        { target: '#tut-hint-fab', text: '提示每局有 3 次，不消耗氧气，可以打开一格。', fab: true }
       ]
     },
 
@@ -296,7 +296,7 @@
     var cfg = {
       cols: s.cols, rows: s.rows,
       mines: 1, chests: 0,
-      stepCost: (s.mission === 'hud-steps') ? 1 : 2,   /* 认识界面那屏按第 1 层算（提示 −6） */
+      stepCost: (s.mission === 'hud-steps') ? 1 : 2,   /* 认识界面那屏按第 1 层算 */
       mineCost: (cfgDefaults && cfgDefaults.mineCost) || 75,
       chestOxy: 0,
       oxygenCap: 999,
