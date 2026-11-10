@@ -196,10 +196,10 @@
       mission: 'hud-steps',
       steps: [
         { target: '.stat.depth', text: '这是潜水深度。打通 100 层，就能登顶。' },
-        { target: '.stat.oxy', text: '这是氧气条，氧气耗尽则本局游戏结束。每点开一格消耗氧气，越深消耗越多；撞上暗礁会掉一大截。' },
-        { target: '#tut-hint-fab', text: '这是提示。推理遇到困难时，点它可以打开一格，每次消耗氧气。', fab: true },
         { target: '#stat-mines-box', text: '这是未探明暗礁：斜杠前面是还没被点开的暗礁数，后面是本层暗礁总数。它有时能帮你推理。' },
-        { target: '.stat.bottles', text: '这是未开启氧气瓶：这一层还剩几个氧气瓶没找到。' }
+        { target: '.stat.bottles', text: '这是未开启氧气瓶：这一层还剩几个氧气瓶没找到。' },
+        { target: '.stat.oxy', text: '这是氧气条，氧气耗尽则本局游戏结束。每点开一格消耗氧气，越深消耗越多；撞上暗礁会掉一大截。' },
+        { target: '#tut-hint-fab', text: '这是提示。推理遇到困难时，点它可以打开一格，每次消耗氧气。', fab: true }
       ]
     },
 

@@ -682,7 +682,7 @@ var DeepDiveUI = (function () {
       ev.preventDefault();
       var idx = idxFromEvent(ev);
       if (idx < 0) { return; }
-      if (handlers.onMark) { handlers.onMark(idx); }
+      fireMark(idx);
     });
 
     /*
@@ -703,7 +703,7 @@ var DeepDiveUI = (function () {
         pressTimer = null;
         pressOrigin = null;
         suppressClick = true;
-        if (handlers.onMark) { handlers.onMark(idx); }
+        fireMark(idx);
       }, LONG_PRESS_MS);
     });
 
