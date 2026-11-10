@@ -26,8 +26,16 @@ var DeepDiveUI = (function () {
   var pressTimer = null;
   var pressOrigin = null;
   var suppressClick = false;
+  /* 标记去重：长按计时器与 contextmenu 都会触发，谁先到谁生效，另一个 700ms 内忽略 */
+  var markFiredAt = 0;
 
   function $(id) { return document.getElementById(id); }
+
+  function fireMark(idx) {
+    if (Date.now() - markFiredAt < 700) { return; }   /* 另一个入口刚处理过 */
+    markFiredAt = Date.now();
+    if (handlers.onMark) { handlers.onMark(idx); }
+  }
 
   /* ---------- 建棋盘 ---------- */
 
@@ -90,13 +98,14 @@ var DeepDiveUI = (function () {
    * 只加一层视觉，不显示读数、不显示内容 —— 玩家只知道「这里被炸过」。
    */
   /* 窄屏（<=430px）把四个标签压成单字，保证一行放得下 */
+  /* HUD 标签：桌面和手机同一套短词（三个方块 + 氧气条） */
+  /* HUD 标签：全文，桌面/手机同一套（与教学口径一致） */
   function applyHudLabels() {
-    var narrow = (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(max-width: 430px)').matches);
-    var d = $('depth-label'), m = $('mine-label'), b = $('bottle-label'), o = $('oxy-label');
-    if (d) { d.textContent = narrow ? '层' : '深度'; }
-    if (m) { m.textContent = narrow ? '礁' : '未探明暗礁'; }
-    if (b) { b.textContent = narrow ? '瓶' : '未开启氧气瓶'; }
-    if (o) { o.textContent = narrow ? '氧' : '氧气'; }
+    var dl = $('depth-label'), ml = $('mine-label'), bl = $('bottle-label'), ol = $('oxy-label');
+    if (dl) { dl.textContent = '深度'; }
+    if (ml) { ml.textContent = '未探明暗礁'; }
+    if (bl) { bl.textContent = '未开启氧气瓶'; }
+    if (ol) { ol.textContent = '氧气'; }
   }
 
   /* 按容器实际可用空间算尺寸：宽高都写死，grid 的 1fr 才有确定基准 */
@@ -173,21 +182,11 @@ var DeepDiveUI = (function () {
      * 抛错就会「状态换了、画面没换」，这正是新关卡看到上一关棋盘的原因。
      */
     if (!state.board) {
-      if (window.__DIVE_DEBUG) { console.log('[RESTART] render(null board) state.oxygen=' + state.oxygen + ' 即将 paintOxygen'); }
       paintOxygen(state);
-      /* null 分支也要画全：数字 + 血条（与 board 分支同一套公式） */
-      $('stat-oxy').textContent = String(state.oxygen);
-      var _cap0 = state.cfg.oxygenCap || 100;
-      var _pct0 = Math.min(100, Math.max(0, state.oxygen) / _cap0 * 100);
-      var _f0 = $('oxy-fill');
-      if (_f0) { _f0.style.width = _pct0 + '%'; if (_pct0 <= 40) { _f0.classList.add('low'); } else { _f0.classList.remove('low'); } }
-      if (window.__DIVE_DEBUG) { console.log('[RESTART] null分支写后 DOM=' + document.getElementById('stat-oxy').textContent); }
-      if (window.__DIVE_DEBUG) { console.log('[RESTART] null分支写后 DOM=' + document.getElementById('stat-oxy').textContent); }
       var dbox0 = document.querySelector('.stat.depth');
       if (dbox0 && dbox0.classList) { dbox0.classList.remove('exit'); }
-      $('stat-mines').textContent = String(state.cfg.mines);
-      $('stat-bottle').textContent = String(state.cfg.chests);
-      if ($('bottle-sub')) { $('bottle-sub').textContent = ''; $('bottle-sub').className = 'k2'; }
+      paintMines(state);
+      paintBottles(state);
       return;
     }
     /* 顺序很重要：必须先建棋盘再上色。反过来的话第一次 render 时 cellEls 还是空的，
@@ -206,7 +205,7 @@ var DeepDiveUI = (function () {
         window.setTimeout(function () { depthBox.classList.remove('pop'); }, 700);
       }
     }
-    $('stat-mines').textContent = L.remainingMines(state) + '/' + state.cfg.mines;
+    paintMines(state);
 
 
     /*
@@ -215,16 +214,7 @@ var DeepDiveUI = (function () {
      */
     var extra = 0;
     /* 进度：还没开的氧气瓶数量（门开后旁边挂 ×2） */
-    var leftBottles = 0;
-    for (var bi = 0; bi < state.open.length; bi++) {
-      if (state.board.cells[bi] === L.CHEST && state.open[bi] === L.HIDDEN) { leftBottles++; }
-    }
-    $('stat-bottle').textContent = String(leftBottles);
-    if ($('bottle-sub')) {
-      var bs = $('bottle-sub');
-      bs.textContent = state.doorOpened ? '奖励 ×2' : '';
-      bs.className = state.doorOpened ? 'k2 shown' : 'k2';
-    }
+    paintBottles(state);
 
     var chip = $('stat-extra');
     if (state.cleared && extra > 0) {
@@ -394,6 +384,34 @@ var DeepDiveUI = (function () {
     if (!box) { return; }
     if (state.oxygen < 30) { box.classList.add('critical'); }
     else { box.classList.remove('critical'); }
+  }
+
+  /* 暗礁计数：未撞到 / 总数（棋盘没铺时一颗都没撞，所以 total/total） */
+  function paintMines(state) {
+    var el = $('stat-mines');
+    if (!el || !state || !state.cfg) { return; }
+    var remaining = state.board ? L.remainingMines(state) : state.cfg.mines;
+    el.textContent = remaining + '/' + state.cfg.mines;
+  }
+
+  /* 氧气瓶计数：还没开启的数量（棋盘没铺时等于总数） */
+  function paintBottles(state) {
+    var el = $('stat-bottle');
+    if (!el || !state || !state.cfg) { return; }
+    var left = 0;
+    if (state.board) {
+      for (var bi = 0; bi < state.open.length; bi++) {
+        if (state.board.cells[bi] === L.CHEST && state.open[bi] === L.HIDDEN) { left++; }
+      }
+    } else {
+      left = state.cfg.chests;
+    }
+    el.textContent = String(left);
+    if ($('bottle-sub')) {
+      var bs = $('bottle-sub');
+      bs.textContent = state.doorOpened ? '奖励 ×2' : '';
+      bs.className = state.doorOpened ? 'k2 shown' : 'k2';
+    }
   }
 
   /* 掉落反馈：数字从格子里往上飘一下，别只闪 HUD */
@@ -688,6 +706,37 @@ var DeepDiveUI = (function () {
         if (handlers.onMark) { handlers.onMark(idx); }
       }, LONG_PRESS_MS);
     });
+
+    /*
+     * 手机长按补一条 touch 通道：DevTools 设备模式/真机里 pointercancel 或细微抖动
+     * 会把 pointerdown 的计时器提前取消，导致长按永远不出标记。
+     */
+    boardEl.addEventListener('touchstart', function (ev) {
+      if (!ev.touches || ev.touches.length !== 1) { return; }
+      var idx = idxFromEvent(ev);
+      if (idx < 0) { return; }
+      cancelPress();
+      suppressClick = false;
+      var t = ev.touches[0];
+      pressOrigin = { x: t.clientX, y: t.clientY };
+      pressTimer = window.setTimeout(function () {
+        pressTimer = null;
+        pressOrigin = null;
+        suppressClick = true;
+        fireMark(idx);
+      }, LONG_PRESS_MS);
+    }, { passive: true });
+
+    boardEl.addEventListener('touchmove', function (ev) {
+      if (!pressOrigin || !ev.touches || ev.touches.length !== 1) { return; }
+      var t = ev.touches[0];
+      var dx = t.clientX - pressOrigin.x;
+      var dy = t.clientY - pressOrigin.y;
+      if (dx * dx + dy * dy > 18 * 18) { cancelPress(); }   /* 手指抖动容忍放大到 18px */
+    }, { passive: true });
+
+    boardEl.addEventListener('touchend', cancelPress);
+    boardEl.addEventListener('touchcancel', cancelPress);
 
     boardEl.addEventListener('pointermove', function (ev) {
       if (!pressOrigin) { return; }
