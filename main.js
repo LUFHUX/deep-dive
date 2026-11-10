@@ -566,6 +566,12 @@
     var s = tutScreen();
     TUT_READY_AT = Date.now() + 300;   /* 进屏后 300ms 内忽略点击 */
     dlog('[TUT] 进入第 ' + (TUT_IDX + 1) + ' 屏 id=' + (s && s.id) + ' cfg=' + (state && state.cfg ? (state.cfg.cols + 'x' + state.cfg.rows) : '-') + ' board=' + (state && state.board ? '有' : 'null'));
+    /* 每次进屏先清掉上一屏的 HUD 高亮（第 7/8/9 屏不许残留） */
+    if (document.body) { document.body.classList.remove('tut-hud'); }
+    var hudHi = document.querySelectorAll('.tut-hud-hi');
+    for (var hi = 0; hi < hudHi.length; hi++) { hudHi[hi].classList.remove('tut-hud-hi'); }
+    var hintBtn0 = document.getElementById('hint-btn');
+    if (hintBtn0) { hintBtn0.classList.remove('tut-hud-hi-btn'); }
     if (!s) { return; }
     $val('tut-step', (TUT_IDX + 1) + ' / ' + DeepDiveTutorial.COUNT);
     $val('tut-text', s.text || '');
@@ -588,8 +594,6 @@
     if (cell && cell.classList) { cell.classList.add('tut-target'); }
 
     /* 第 6 屏：高亮当前子步指向的 HUD 元素 */
-    var hudHi = document.querySelectorAll('.tut-hud-hi');
-    for (var hi = 0; hi < hudHi.length; hi++) { hudHi[hi].classList.remove('tut-hud-hi'); }
     if (s.mission === 'door-reward') {
       /* 关框后的文案与高亮由 tutOpen 处理；这里只保持显示，不推进 */
       return;
@@ -597,8 +601,6 @@
     if (s.mission === 'finale') { return; }
     if (s.mission === 'hud-steps') {
       if (document.body) { document.body.classList.toggle('tut-hud', !!(s.steps[TUT_STEP] && s.steps[TUT_STEP].fab)); }
-      var hintBtn = document.getElementById('hint-btn');
-      if (hintBtn) { hintBtn.classList.remove('tut-hud-hi-btn'); }
       var st = s.steps[TUT_STEP];
       $val('tut-text', st ? st.text : s.text);
       $val('tut-sub', (st && st.sub) ? st.sub : '');
