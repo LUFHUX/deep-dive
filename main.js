@@ -928,7 +928,7 @@
           if (hEl) { hEl.textContent = '看，剩下的格子免费翻开了。'; hEl.className = 'tut-hint warn'; }
         }, 500);
       }
-      window.setTimeout(tutAdvance, 2300);   /* 标记 500ms + 停顿 2s 后推进 */
+      window.setTimeout(tutAdvance, 1200);   /* 标记动画 500ms + 停顿 700ms */
       return true;
     }
     if (s.mission === 'solve-purple') {
@@ -1411,6 +1411,22 @@
       tutPaint(); tutEnter();
     };
   }
+
+  /* 返回首页：正常关（底部）/ 教学关（右上角） */
+  document.addEventListener('click', function (ev) {
+    var t = ev.target;
+    if (!t || !t.closest) { return; }
+    if (t.closest('#home-btn')) {
+      dlog('[HOME] 正常关返回首页');
+      savedRun = run;
+      renderHome();
+      return;
+    }
+    if (t.closest('#tut-home')) {
+      dlog('[TUT] 教学关返回首页');
+      endTutorial();
+    }
+  });
 
   U.init({ onOpen: onOpen, onMark: onMark, onRestart: onRestart, onHint: onHint, onDive: onDive, onToggleMode: onToggleMode });
 

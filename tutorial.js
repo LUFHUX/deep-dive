@@ -85,6 +85,8 @@
       kind: 'act',
       text: '现在红色数字 1 周围的七个格子都打开了，都不是暗礁，所以剩下没打开的这格肯定是暗礁。',
       sub: '',
+      hint: '点一下高亮的格子。',
+      hintYellow: true,
       cols: 5, rows: 5,
       cells: (function () {
         var c = [];

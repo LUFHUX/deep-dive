@@ -203,7 +203,6 @@ body {
 .board {
   position: relative;
   display: grid;
-  --axis: 15px;
   grid-template-columns: repeat(9, minmax(0, 1fr));
   grid-template-rows: repeat(9, minmax(0, 1fr));
   gap: 5px;
@@ -220,17 +219,7 @@ body {
  * 未翻开 = 凸起（顶亮边 + 外投影），已翻开 = 凹陷 + 压一层暗。
  * 也就是说只有「明暗关系」在变，色相永远中性，绝不随红蓝紫变。
  */
-/* 坐标：小、暗、不抢戏，但永远在 */.axis {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 9.5px;
-  font-variant-numeric: tabular-nums;
-  color: var(--text-faint);
-  opacity: .75;
-  user-select: none;
-  pointer-events: none;
-}
+/* 坐标：小、暗、不抢戏，但永远在 */
 
 /* 第 1 级：这组读数圈住的未知格 */
 .cell.hint-group {
@@ -1239,15 +1228,21 @@ html, body {
   font-weight: 700;
   min-height: 16px;
 }
-/* 教学里被指定的格子闪一下，告诉玩家点哪 */
+/* 教学里被指定的格子闪一下，告诉玩家点哪（亮 → 暗 → 亮，0.9s） */
 .cell.tut-target {
-  animation: tut-target 1.1s ease-in-out infinite;
-  outline: 2px solid rgba(255, 216, 107, .85);
-  outline-offset: -2px;
+  animation: tut-target .9s ease-in-out infinite;
+  outline: 3px solid #ffd86b;
+  outline-offset: -3px;
 }
 @keyframes tut-target {
-  0%, 100% { box-shadow: inset 0 0 0 2px rgba(255,216,107,.55); }
-  50%      { box-shadow: inset 0 0 0 2px rgba(255,216,107,.95), 0 0 14px rgba(255,216,107,.45); }
+  0%, 100% {
+    outline-color: #ffd86b;
+    box-shadow: 0 0 0 2px rgba(255, 216, 107, .9), 0 0 16px rgba(255, 216, 107, .75);
+  }
+  50% {
+    outline-color: rgba(255, 216, 107, .12);
+    box-shadow: 0 0 0 2px rgba(255, 216, 107, .12), 0 0 0 rgba(255, 216, 107, 0);
+  }
 }
 
 /* 教学第 6 屏：高亮当前讲解的 HUD 元素 */
@@ -1828,4 +1823,18 @@ body.tut-on.tut-hud .foot { display: none !important; }
 @media (max-width: 430px) {
   .hud { gap: 5px; }
   .hud-row { gap: 5px; }
+}
+
+/* 首页底部：设置居中，反馈 / 关于靠右 */
+.home-foot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.home-foot-main {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }

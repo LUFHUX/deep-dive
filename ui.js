@@ -48,31 +48,13 @@ var DeepDiveUI = (function () {
      *  - 只写列的话，行是隐式 auto 行，会被数字撑高，翻开前后格子尺寸和行高就变了
      *  - 用 1fr 而不是 minmax(0,1fr) 的话，min 仍是 auto=min-content，照样会被撑开
      * （v0.5.1 规则第 8 条） */
-    /* 左边一列行号、上面一行列号，和提示文案的「第 X 行第 Y 列」一一对应。
-     * 格子区仍是正方形：整块棋盘是正方形，扣掉左上角那条等宽的边就还是正方形。 */
-    boardEl.style.gridTemplateColumns = 'var(--axis) repeat(' + cfg.cols + ', minmax(0, 1fr))';
-    boardEl.style.gridTemplateRows = 'var(--axis) repeat(' + cfg.rows + ', minmax(0, 1fr))';
-    /* 格子必须等大且正方形（DESIGN 规则 8）：棋盘宽高比 = 列数 / 行数，格子区还要扣掉坐标那一行一列 */
+    boardEl.style.gridTemplateColumns = 'repeat(' + cfg.cols + ', minmax(0, 1fr))';
+    boardEl.style.gridTemplateRows = 'repeat(' + cfg.rows + ', minmax(0, 1fr))';
+    /* 格子必须等大且正方形（DESIGN 规则 8） */
     fitBoard(boardEl, cfg.cols, cfg.rows);
-
-    var corner = document.createElement('div');
-    corner.className = 'axis';
-    boardEl.appendChild(corner);
-
-    for (var c = 0; c < cfg.cols; c++) {
-      var cl = document.createElement('div');
-      cl.className = 'axis';
-      cl.textContent = String(c + 1);
-      boardEl.appendChild(cl);
-    }
 
     cellEls = [];
     for (var r = 0; r < cfg.rows; r++) {
-      var rl = document.createElement('div');
-      rl.className = 'axis';
-      /* 行用字母 A–I，和提示文案里的 E3 对得上（DESIGN v6/v7） */
-      rl.textContent = String.fromCharCode(65 + r);
-      boardEl.appendChild(rl);
 
       for (var cc = 0; cc < cfg.cols; cc++) {
         var i = r * cfg.cols + cc;
