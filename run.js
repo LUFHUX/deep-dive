@@ -17,7 +17,9 @@ var DeepDiveRun = (function () {
   var MINE_COST = 10;
   var STEP_COST = 2;
   var HINT_COST = 4;   /* 提示：教你怎么看 */
-    var HINT_LIMIT = 3;   /* 每局提示次数（不消耗氧气） */
+    /* 补给倍数：每 20 层一档（1–20 ×10, 21–40 ×9, 41–60 ×8, 61–80 ×7, 81–100 ×6） */
+  var SUPPLY_MULT = [10, 9, 8, 7, 6];
+  var HINT_LIMIT = 3;   /* 每局提示次数（不消耗氧气） */
 
   /* 第 n 层用什么配置铺盘 */
   /*
@@ -36,7 +38,7 @@ var DeepDiveRun = (function () {
       rows: lv.rows,
       mines: lv.mines,
       chests: lv.chests,
-      chestOxy: stepCost * 10,
+      chestOxy: stepCost * SUPPLY_MULT[Math.min(Math.ceil(depth / 20), SUPPLY_MULT.length) - 1],
       /* 阶梯表只管尺寸/暗礁/箱/配额/补给；炸弹相关先给基准值再叠修饰符 */
     };
     if (mods) { DeepDiveModifiers.apply(base, mods); }
@@ -57,19 +59,19 @@ var DeepDiveRun = (function () {
       chestOxy: base.chestOxy,
       chestRareOxy: base.chestRareOxy,
       oxygen: oxygen,
-      /* v22：肺活量随深度增长 —— 每层上限 = 100 + 深度 */
-      oxygenCap: 100 + Math.min(Math.max(depth - 1, 0), 50),
+      /* 氧气上限固定 100（不再随深度增长） */
+      oxygenCap: 100,
       /* v29：步成本四档（上面已算好） */
       stepCost: stepCost,
-      /* v29：伤害 = round(本层上限 ÷ N)，N 来自 ladder 的 hitDivisor；第 100 关写死 150 */
+      /* v29：伤害 = round(本层上限 ÷ N)，N 来自 ladder 的 hitDivisor；第 100 关写死 100 */
       mineCost: (function (d) {
-        if (d >= 100) { return 150; }
-        var cap = 100 + Math.min(Math.max(d - 1, 0), 50);
+        if (d >= 100) { return 100; }
+        var cap = 100;
         var b = DeepDiveLadder.bandFor(d);
         var n = (b && b.hitDivisor) ? b.hitDivisor : 4;
         return Math.round(cap / n);
       })(depth),
-      /* mineCost 由上面的深度公式决定，不再读 ladder */
+      /* mineCost = round(100 / hitDivisor)，第 100 层写死 100 */
       /* 这一层的主压力 / 形态，供生成环节用 */
       pressure: lv.pressure,
       pressureName: lv.pressureName,
@@ -89,6 +91,7 @@ var DeepDiveRun = (function () {
     bottles: 0,
     hits: 0,
       hintsLeft: HINT_LIMIT,
+      adsWatched: 0,          /* 本局看过几次广告（复活用） */
       seed: (seed >>> 0) || 1,
       mods: DeepDiveModifiers.emptyStacks(),
       modsDrawn: 0          /* 已经抽到第几关；存档回来不会重复抽 */
@@ -130,7 +133,7 @@ var DeepDiveRun = (function () {
 
     if (level.perfect) {
       next.depth = run.depth + 1;
-      var capNext = 100 + Math.min(Math.max(run.depth, 0), 50);
+      var capNext = 100;   /* 上限固定 100 */
       next.oxygen = Math.min(capNext, left + CLEAR_BONUS);   /* 清场回氧也不许超过上限 */
       return { run: next, finished: false, collected: collected };
     }
@@ -191,6 +194,7 @@ var DeepDiveRun = (function () {
     STEP_COST: STEP_COST,
     HINT_COST: HINT_COST,
     HINT_LIMIT: HINT_LIMIT,
+    SUPPLY_MULT: SUPPLY_MULT,
     dive: dive,
     drawModsIfNeeded: drawModsIfNeeded,
     configFor: configFor,

@@ -62,11 +62,53 @@
     </div>
 
     <!-- 结算界面：通关 / 失败共用骨架，skin 区分 -->
-    <div class="result-layer" id="result-layer" hidden>
+    <!-- 设置面板（临时：目前只有「减少动态效果」一项） -->
+  <div class="settings-layer" id="settings-layer" hidden>
+    <div class="settings-card" role="dialog" aria-modal="true" aria-label="设置">
+      <div class="settings-title">设置</div>
+      <button class="settings-row" id="reduce-motion-toggle" type="button" role="switch" aria-checked="false">
+        <span class="settings-label">减少动态效果</span>
+        <span class="settings-switch" aria-hidden="true"><i></i></span>
+      </button>
+      <p class="settings-note">关闭后不再显示闪光、粒子、滑入等效果。</p>
+      <button class="btn" id="settings-close" type="button">关闭</button>
+    </div>
+  </div>
+
+  <!-- 氧气耗尽：复活框 -->
+  <div class="settings-layer" id="revive-layer" hidden>
+    <div class="settings-card" role="dialog" aria-modal="true" aria-label="氧气耗尽">
+      <div class="settings-title revive-title">氧气耗尽</div>
+      <p class="settings-note revive-body">看一次广告，补 50 点氧气，继续下潜？</p>
+      <div class="revive-oxy"><span class="revive-oxy-num">+50</span><span class="revive-oxy-unit">氧气</span></div>
+      <div class="revive-actions">
+        <button class="btn primary" id="revive-ad" type="button">看广告</button>
+        <button class="btn" id="revive-giveup" type="button">认输</button>
+      </div>
+      <p class="settings-note feedback-late" id="revive-left">本局还剩 3 次机会</p>
+    </div>
+  </div>
+
+  <!-- 反馈面板 -->
+  <div class="settings-layer" id="feedback-layer" hidden>
+    <div class="settings-card" role="dialog" aria-modal="true" aria-label="反馈">
+      <div class="settings-title">反馈</div>
+      <p class="settings-note">遇到问题、或者想说什么，加我微信：</p>
+      <div class="feedback-wx" id="feedback-wx">RIP_ME_OPEN</div>
+      <button class="btn primary" id="feedback-copy" type="button">复制微信号</button>
+      <div class="feedback-divider"></div>
+      <button class="btn" id="feedback-contact" type="button">联系开发者</button>
+      <p class="settings-note feedback-late">回复可能不及时，见谅。</p>
+      <button class="btn" id="feedback-close" type="button">关闭</button>
+    </div>
+  </div>
+
+  <div class="result-layer" id="result-layer" hidden>
       <div class="result-particles" id="result-particles"></div>
       <div class="result-card">
         <div class="result-head">
-          <div class="result-kicker" id="result-kicker"></div>
+          <div class="result-mode" id="result-mode">经典模式</div>
+        <div class="result-kicker" id="result-kicker"></div>
           <div class="result-title" id="result-title"></div>
           <div class="result-badge" id="result-badge" hidden></div>
         </div>
@@ -86,7 +128,6 @@
 
     </div>
     <div class="meta">
-      <span class="seed" id="seed"></span>
       <button class="btn" id="hint-btn">提示 剩3次</button>
       <button class="btn" id="restart">重新下潜</button>
       <button class="btn" id="home-btn">返回首页</button>
@@ -112,12 +153,18 @@
         <button class="btn primary home-main" id="home-start" data-home-action="start" type="button">开始下潜</button>
         <button class="home-link" id="home-restart" data-home-action="restart" type="button" hidden>重新开始</button>
 
-        <div class="home-mode" id="home-mode" data-home-action="mode">
-          <span>经典模式（100% 纯推理可解）</span><span class="home-caret">▾</span>
+        <div class="home-mode-list" id="home-mode-list">
+          <button class="home-mode home-mode-trigger" id="home-mode" data-home-action="mode"
+                  type="button" aria-haspopup="listbox" aria-expanded="false">
+            <span>经典模式（100% 纯推理可解）</span><span class="home-caret">▾</span>
+          </button>
+          <div class="home-mode-menu" id="home-mode-menu" hidden>
+            <div class="home-mode-item is-active" data-home-action="mode-classic">经典模式（100% 纯推理可解）</div>
+            <div class="home-mode-item is-disabled">其他玩法开发中，敬请期待</div>
+          </div>
         </div>
 
         <button class="btn home-tut" id="home-tutorial" data-home-action="tutorial" type="button">新手教学</button>
-        <p class="home-note">第一次玩，建议先看</p>
       </section>
 
       <section class="home-records">

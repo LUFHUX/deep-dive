@@ -36,7 +36,7 @@
       id: 'open-cell',
       kind: 'act',
       text: '点一下高亮的格子。',
-      sub: '上方那条是氧气，作用稍后解释。',
+      sub: '',
       hint: '',
       hintYellow: false,
       cols: 5, rows: 5,
@@ -105,7 +105,7 @@
       allow: [6],
       highlight: 6,
       oxygen: 20,
-      demoText: '看，点击暗礁，氧气会减少。',
+      demoText: '游戏中要尽量避免碰撞暗礁，发现暗礁别点开，标记它。',
       mission: 'demo-then-mark',
       demoIdx: 6
     },
@@ -197,11 +197,11 @@
       oxygen: 40,
       mission: 'hud-steps',
       steps: [
-        { target: '.stat.depth', text: '这是潜水深度。打通 100 层，就能到达海底。' },
+        { target: '.stat.depth', text: '这是潜水深度。下潜 100 层，就能到达海底。' },
         { target: '#stat-mines-box', text: '这是未探明暗礁：斜杠前面是还没被点开的暗礁数，后面是本层暗礁总数。它有时能帮你推理。' },
         { target: '.stat.bottles', text: '这是未开启氧气瓶：这一层还剩几个氧气瓶没找到。' },
         { target: '.stat.oxy', text: '这是氧气条，氧气耗尽则本局游戏结束。每点开一格消耗氧气，越深消耗越多；撞上暗礁会大量消耗氧气。' },
-        { target: '#tut-hint-fab', text: '提示每局有 3 次，不消耗氧气，可以打开一格。', fab: true }
+        { target: '#tut-hint-fab', text: '提示每局有 3 次，点击可以打开一格。', fab: true }
       ]
     },
 
@@ -215,12 +215,14 @@
       cells: (function () {
         var c = []; for (var i = 0; i < 36; i++) { c.push(EMPTY); }
         c[15] = CHEST;                    /* 门就绑在这个瓶子上 */
+        c[26] = CHEST;                    /* 拍 3 让玩家点的那个普通氧气瓶 */
         c[6] = MINE; c[16] = MINE;        /* 两颗远处暗礁，让海床合法 */
         return c;
       })(),
       open: (function () {
         var o = []; for (var i = 0; i < 36; i++) { o.push(OPEN_SAFE); }
         o[15] = HIDDEN;                   /* 进屏时自动打开它 */
+        o[26] = HIDDEN;                   /* 拍 3 要点的那个瓶子 */
         o[6] = HIDDEN; o[16] = HIDDEN;
         return o;
       })(),
@@ -229,6 +231,9 @@
       oxygen: 20,
       mission: 'door-manual',
       door: 15,
+      extraChest: 26,
+      chestOxy: 8,
+      hudHighlight: '',
       swirlBeatText: '点击漩涡进入下一关。'
     },
 
@@ -298,8 +303,8 @@
       mines: 1, chests: 0,
       stepCost: (s.mission === 'hud-steps') ? 1 : 2,   /* 认识界面那屏按第 1 层算 */
       mineCost: (cfgDefaults && cfgDefaults.mineCost) || 75,
-      chestOxy: 0,
-      oxygenCap: 999,
+      chestOxy: (s.mission === 'door-manual') ? 8 : 0,   /* 第7屏的瓶子按真实补给；门已开→×2 */
+      oxygenCap: 100,
       markCost: 0
     };
     return {

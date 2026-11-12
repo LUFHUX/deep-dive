@@ -70,27 +70,34 @@
     ctx.font = '500 28px ' + FONT;
     ctx.fillText('《深潜》', W / 2, 118);
 
+    /* 模式标签：单独一行，不和《深潜》拼字符串 */
+    ctx.fillStyle = 'rgba(180, 220, 245, .55)';
+    ctx.font = '500 22px ' + FONT;
+    ctx.fillText('经典模式', W / 2, 152);
+
     /* ---------- 主标题 ---------- */
     ctx.fillStyle = win ? '#ffd86b' : '#eaf6ff';
     ctx.font = 'bold 62px ' + FONT;
     var title = win ? '你潜到了海底！' : ('你停在了第 ' + (run.depth || 1) + ' 层');
     ctx.fillText(title, W / 2, win ? 250 : 250);
 
-    /* ---------- 徽章 ---------- */
+    /* ---------- 徽章（perfect 优先；否则零撞礁） ---------- */
     var badgeY = 318;
-    if (win && (run.hits || 0) === 0) {
-      var text = '完美推理';
-      ctx.font = 'bold 30px ' + FONT;
+    var hintsUsed = 3 - (typeof run.hintsLeft === 'number' ? run.hintsLeft : 3);
+    var badgeKind = !win ? null : ((run.hits || 0) !== 0 ? null : ((hintsUsed === 0 && (run.adsWatched || 0) === 0) ? 'perfect' : 'clean'));
+    if (badgeKind) {
+      var text = badgeKind === 'perfect' ? '完美推理' : '零撞礁';
+      ctx.font = 'bold ' + (badgeKind === 'perfect' ? 30 : 26) + 'px ' + FONT;
       var tw = ctx.measureText(text).width;
       var bw = tw + 68;
       var bh = 62;
       roundRect(ctx, W / 2 - bw / 2, badgeY, bw, bh, 31);
       var bg2 = ctx.createLinearGradient(0, badgeY, 0, badgeY + bh);
-      bg2.addColorStop(0, '#ffe28a');
-      bg2.addColorStop(1, '#f5b93c');
+      if (badgeKind === 'perfect') { bg2.addColorStop(0, '#ffe28a'); bg2.addColorStop(1, '#f5b93c'); }
+      else { bg2.addColorStop(0, '#cfe9f6'); bg2.addColorStop(1, '#9fc4d8'); }
       ctx.fillStyle = bg2;
       ctx.fill();
-      ctx.fillStyle = '#201603';
+      ctx.fillStyle = badgeKind === 'perfect' ? '#201603' : '#07202e';
       ctx.textBaseline = 'middle';
       ctx.fillText(text, W / 2, badgeY + bh / 2 + 1);
       ctx.textBaseline = 'alphabetic';

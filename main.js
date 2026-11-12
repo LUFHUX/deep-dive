@@ -146,7 +146,7 @@
     if (hasResumableSave()) {
       run = savedRun || run;
       savedRun = run;
-      var cap = 100 + Math.min(Math.max((run.depth || 1) - 1, 0), 50);
+      var cap = 100;
       if (run.oxygen > cap) { run.oxygen = cap; }
       startLevel();
     } else {
@@ -166,14 +166,13 @@
   }
 
   function showToast(title, sub, ms) {
-    var layer = document.getElementById('home-layer');
-    if (!layer) { return; }
+    /* 必须挂 body：.home-layer 有 z-index:60 的层叠上下文，挂在里面再高的 z-index 也压不过面板 */
     var el = document.getElementById('home-toast');
     if (!el) {
       el = document.createElement('div');
       el.id = 'home-toast';
       el.className = 'home-toast';
-      layer.appendChild(el);
+      document.body.appendChild(el);
     }
     el.textContent = sub ? (title + ' · ' + sub) : title;
     el.classList.add('show');
@@ -181,11 +180,161 @@
     el._t = window.setTimeout(function () { el.classList.remove('show'); }, ms || 1800);
   }
 
-  function homeSettings() { showToast('设置即将开放', '', 1600); }
-  function homeFeedback() { showToast('反馈即将开放', '', 1600); }
+  /* ---------- 首次进入：教学按钮引导 ---------- */
+  var VISITED_KEY = 'dd-visited';
+  function markVisited() {
+    try { if (window.localStorage) { window.localStorage.setItem(VISITED_KEY, '1'); } } catch (e) {}
+    var btn = document.getElementById('home-tutorial');
+    if (btn) { btn.classList.remove('tut-guide'); }
+  }
+  function applyFirstVisitGuide() {
+    var seen = null;
+    try { seen = window.localStorage ? window.localStorage.getItem(VISITED_KEY) : null; } catch (e) { seen = null; }
+    var btn = document.getElementById('home-tutorial');
+    if (!btn) { return; }
+    if (seen) { btn.classList.remove('tut-guide'); }
+    else { btn.classList.add('tut-guide'); }
+  }
+  applyFirstVisitGuide();
+
+  /* ---------- 减少动态效果 ---------- */
+  var MOTION_KEY = 'dd-reduce-motion';
+  function motionOn() { return document.body.classList.contains('reduce-motion'); }
+  function applyMotion(on) {
+    if (document.body) { document.body.classList.toggle('reduce-motion', !!on); }
+    var sw = document.getElementById('reduce-motion-toggle');
+    if (sw) { sw.setAttribute('aria-checked', on ? 'true' : 'false'); }
+  }
+  function initMotionPref() {
+    var saved = null;
+    try { saved = window.localStorage ? window.localStorage.getItem(MOTION_KEY) : null; } catch (e) { saved = null; }
+    var sys = false;
+    try { sys = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { sys = false; }
+    applyMotion(saved === null ? sys : saved === '1');
+  }
+  function toggleMotionPref() {
+    var next = !motionOn();
+    applyMotion(next);
+    try { if (window.localStorage) { window.localStorage.setItem(MOTION_KEY, next ? '1' : '0'); } } catch (e) {}
+  }
+  function openSettings() {
+    var layer = document.getElementById('settings-layer');
+    if (!layer) { return; }
+    layer.hidden = false;
+    var sw = document.getElementById('reduce-motion-toggle');
+    if (sw) { sw.setAttribute('aria-checked', motionOn() ? 'true' : 'false'); }
+  }
+  function closeSettings() {
+    var layer = document.getElementById('settings-layer');
+    if (layer) { layer.hidden = true; }
+  }
+  function homeSettings() { openSettings(); }
+  function openFeedback() {
+    var layer = document.getElementById('feedback-layer');
+    if (layer) { layer.hidden = false; }
+  }
+  function closeFeedback() {
+    var layer = document.getElementById('feedback-layer');
+    if (layer) { layer.hidden = true; }
+  }
+  function copyText(text, done) {
+    /* 优先 Clipboard API；失败（非安全上下文 / 无权限）降级到 execCommand。
+     * 用回调而不是 Promise —— undefcheck 不允许未声明的全局 Promise。 */
+    function fallback() {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0';
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = document.execCommand && document.execCommand('copy');
+        document.body.removeChild(ta);
+        return !!ok;
+      } catch (e) { return false; }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(fallback()); });
+      } catch (e) { done(fallback()); }
+      return;
+    }
+    done(fallback());
+  }
+  function copyWx() {
+    var wxId = (document.getElementById('feedback-wx') || {}).textContent || '';
+    copyText(String(wxId).trim(), function (ok) {
+      if (ok) { showToast('已复制', wxId, 1400); }
+      else { showToast('复制失败', '请长按微信号手动复制', 1800); }
+    });
+  }
+  function contactDeveloper() {
+    /* 微信版：这里换成 wx.openCustomerServiceChat（需要 extInfo.url 与 corpId）
+     *   wx.openCustomerServiceChat({
+     *     extInfo: { url: '<客服页面地址>' },
+     *     corpId: '<企业微信 corpId>',
+     *     success() {}, fail() {}
+     *   });
+     * 网页版目前只给提示。
+     */
+    /* 用 window.wx 而不是裸 wx：微信小游戏里 wx 是全局对象，网页里可能没有 */
+    var wxApi = (typeof window !== 'undefined' && window.wx) ? window.wx : null;
+    if (wxApi && wxApi.openCustomerServiceChat) {
+      /* 微信版接口位置（暂不启用） */
+      try {
+        wxApi.openCustomerServiceChat({
+          extInfo: { url: '' },   /* TODO: 填 extInfo.url */
+          corpId: '',             /* TODO: 填 corpId */
+          success: function () {},
+          fail: function () { showToast('没打开', '请加微信 RIP_ME_OPEN', 1800); }
+        });
+        return;
+      } catch (e) { /* 落到网页提示 */ }
+    }
+    showToast('微信版开放后可直接联系；现在请加我微信。', '', 2200);
+  }
+  function homeFeedback() { openFeedback(); }
   function homeAbout() {
     showToast('《深潜》 v' + APP_VERSION, '一片等你探索的未知海域', 2400);
   }
+
+  /* 模式下拉：展开 / 收起 / 点页面其它地方收起 */
+  function closeModeMenu() {
+    var mm = document.getElementById('home-mode-menu');
+    var trig = document.getElementById('home-mode');
+    if (mm) { mm.hidden = true; }
+    if (trig) { trig.setAttribute('aria-expanded', 'false'); }
+  }
+  function toggleModeMenu() {
+    var mm = document.getElementById('home-mode-menu');
+    var trig = document.getElementById('home-mode');
+    if (!mm) { return; }
+    var willOpen = mm.hidden;
+    mm.hidden = !willOpen;
+    if (trig) { trig.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); }
+  }
+  document.addEventListener('click', function (ev) {
+    var list = document.getElementById('home-mode-list');
+    if (!list || list.contains(ev.target)) { return; }   /* 列表内的点击交给各自处理 */
+    closeModeMenu();
+  });
+
+  document.addEventListener('click', function (ev) {
+    var t = ev.target;
+    if (!t || !t.closest) { return; }
+    if (t.closest('#reduce-motion-toggle')) { toggleMotionPref(); return; }
+    if (t.closest('#settings-close')) { closeSettings(); return; }
+    if (t.closest('#feedback-copy')) { copyWx(); return; }
+    if (t.closest('#feedback-contact')) { contactDeveloper(); return; }
+    if (t.closest('#feedback-close')) { closeFeedback(); return; }
+    if (t.closest('#revive-ad')) { reviveByAd(); return; }
+    if (t.closest('#revive-giveup')) { hideRevive(); finishLose(); return; }
+    var layer = document.getElementById('settings-layer');
+    if (layer && !layer.hidden && t === layer) { closeSettings(); }
+    var fb = document.getElementById('feedback-layer');
+    if (fb && !fb.hidden && t === fb) { closeFeedback(); }
+  });
+  initMotionPref();
 
   /* 首页按钮：document 级委托（不依赖元素先存在） */
   document.addEventListener('click', function (ev) {
@@ -195,23 +344,33 @@
     if (!el) { return; }
     var act = el.getAttribute('data-home-action');
     dlog('[HOME] ' + act);
-    if (act === 'start') { homeStart(); }
+    if (act === 'start') { markVisited(); homeStart(); }
     else if (act === 'restart') { homeRestart(); }
-    else if (act === 'tutorial') { homeTutorial(); }
+    else if (act === 'tutorial') { markVisited(); homeTutorial(); }
     else if (act === 'settings') { homeSettings(); }
     else if (act === 'feedback') { homeFeedback(); }
     else if (act === 'about') { homeAbout(); }
     else if (act === 'mode') {
-      /* 目前只有「经典模式」一项，做成不可展开；将来的挑战 / 深渊模式加在这里 */
-      showToast('经典模式', '其它模式开发中', 1600);
+      toggleModeMenu();
+    }
+    else if (act === 'mode-classic') {
+      closeModeMenu();   /* 目前只有它一个可选，选了等于不变 */
     }
   });
+
+  /* 徽章判定：perfect 优先，其次 clean，否则无。两处结算都调它 */
+  function badgeKind(r) {
+    if ((r.hits || 0) !== 0) { return null; }
+    var hintsUsed = 3 - (typeof r.hintsLeft === 'number' ? r.hintsLeft : 3);
+    if (hintsUsed === 0 && (r.adsWatched || 0) === 0) { return 'perfect'; }
+    return 'clean';
+  }
 
   /* 结算展示：通关 / 失败共用一套行定义，真实流程和 ?win=1 / ?lose=1 都走这里 */
   function showResultWin() {
     DeepDiveResult.show({
       skin: 'win',
-      perfect: (run.hits || 0) === 0,
+      badge: badgeKind(run),
       rows: [
         { k: '海底编号', v: '#' + String(run.seed || 0) },
         { k: '本次用时', v: DeepDiveResult.fmtDur(run.activeMs) },
@@ -378,7 +537,6 @@
       U.render(state);
       var restoredMods = DeepDiveModifiers.short(run.mods);
       U.setMods(restoredMods);
-      document.getElementById('seed').textContent = '海底编号 #' + state.seed;
       return;
     }
 
@@ -408,15 +566,6 @@
     U.setHintLeft(run.hintsLeft);
     U.render(state);
     if (run.depth >= 100) { U.showBanner('第 100 层', '撞上一次礁，就结束了', 2500, 'final'); }
-    /* 氧气上限 +1：本层与上一层都用同一公式现算，差值永远是 1（51 层封顶后不弹） */
-    if (run.depth > 1) {
-      var capNow = cfg.oxygenCap;
-      var capPrev = 100 + Math.min(Math.max(run.depth - 2, 0), 50);
-      if (capNow > capPrev) {
-        U.showBanner('氧气上限 +' + (capNow - capPrev), '深潜让肺活量更大了', 1800, 'cap');
-      }
-    }
-    document.getElementById('seed').textContent = '海底编号 #' + seed;
     saveRun();
   }
 
@@ -436,8 +585,62 @@
     run.hits = 0;
     activeSince = Date.now();
     saveRun();
-    document.getElementById('seed').textContent = '';
     startLevel();
+  }
+
+  /* 失败结算（复活次数用完后 / 认输） */
+  function finishLose() {
+    phase = 'ended';
+    var best = R.isNewRecord(records, run);
+    records = R.updateRecords(records, run);
+    records.totalMs = (records.totalMs || 0) + Math.round(activeTotal());
+    saveRecords();
+    dropKey(SAVE_RUN);
+    run.activeMs = activeTotal();
+    DeepDiveResult.show({
+      skin: 'lose',
+      depth: run.depth,
+      rows: [
+        { k: '到达深度', v: '第 ' + run.depth + ' 层' },
+        { k: '本局用时', v: DeepDiveResult.fmtDur(run.activeMs) },
+        { k: '打捞氧气瓶', n: run.totalCollected || 0, unit: ' 个' },
+        { k: '翻开格子', n: run.cellsOpened || 0, unit: ' 格' },
+        { k: '撞击暗礁', n: run.hits || 0, unit: ' 次' },
+        { k: '历史最深', v: '第 ' + records.deepest + ' 层' },
+        { k: '结束时间', v: DeepDiveResult.fmtDate(Date.now()) }
+      ],
+      primaryLabel: '重新下潜',
+      onPrimary: function () { DeepDiveResult.hide(); newDive(); },
+      onHome: function () { window.location.reload(); }
+    });
+  }
+
+  /* 氧气耗尽复活框 */
+  function showRevive() {
+    var layer = document.getElementById('revive-layer');
+    if (!layer) { return; }
+    var left = 3 - (run.adsWatched || 0);
+    var t = document.getElementById('revive-left');
+    if (t) { t.textContent = '本局还剩 ' + left + ' 次机会'; }
+    layer.hidden = false;
+    phase = 'ended';   /* 先锁住棋盘，看完广告再解锁 */
+  }
+  function hideRevive() {
+    var layer = document.getElementById('revive-layer');
+    if (layer) { layer.hidden = true; }
+  }
+  function reviveByAd() {
+    /* 假实现：直接当广告已看完。
+     * 接 SDK 后换成 wx.createRewardedVideoAd / tt.createRewardedVideoAd 的 onClose 回调，
+     * 仅在 res.isEnded === true 时执行下面这四步。 */
+    run.adsWatched = (run.adsWatched || 0) + 1;
+    state.oxygen = 50;               /* 固定补到 50，不是 +50 */
+    state.status = L.PLAYING;
+    phase = 'playing';
+    hideRevive();
+    U.render(state);
+    saveRun();
+    showToast('氧气 +50', '', 1400);
   }
 
   /* 一层怎么收尾：清场就下一层，氧气耗尽就结束本次下潜 */
@@ -450,31 +653,12 @@
     dropKey(SAVE_LEVEL);
 
     if (res.finished) {
-      phase = 'ended';
-      var best = R.isNewRecord(records, run);
-      records = R.updateRecords(records, run);
-      records.totalMs = (records.totalMs || 0) + Math.round(activeTotal());
-      saveRecords();
-      dropKey(SAVE_RUN);
-      run.activeMs = activeTotal();
-      /* 旧行已由 statLine 取代 */
-      dlog('[STAT-old] 深度=' + run.depth + ' 翻开=' + run.cellsOpened + ' 瓶=' + run.bottles + ' 撞=' + run.hits + ' 活跃=' + Math.round(run.activeMs) + 'ms');
-      DeepDiveResult.show({
-        skin: 'lose',
-        depth: run.depth,
-        rows: [
-          { k: '到达深度', v: '第 ' + run.depth + ' 层' },
-          { k: '本局用时', v: DeepDiveResult.fmtDur(run.activeMs) },
-          { k: '打捞氧气瓶', n: run.totalCollected || 0, unit: ' 个' },
-          { k: '翻开格子', n: run.cellsOpened || 0, unit: ' 格' },
-          { k: '撞击暗礁', n: run.hits || 0, unit: ' 次' },
-          { k: '历史最深', v: '第 ' + records.deepest + ' 层' },
-          { k: '结束时间', v: DeepDiveResult.fmtDate(Date.now()) }
-        ],
-        primaryLabel: '重新下潜',
-        onPrimary: function () { DeepDiveResult.hide(); newDive(); },
-        onHome: function () { window.location.reload(); }
-      });
+      /* 氧气耗尽：还有复活次数就先弹框，不直接结算 */
+      if ((state.oxygen <= 0 || run.oxygen <= 0) && (run.adsWatched || 0) < 3) {
+        showRevive();
+        return;
+      }
+      finishLose();
       return;
     }
 
@@ -512,7 +696,6 @@
       : null;
     var gated = G.ensureSolvable(state, idx, { maxAttempts: GATE_MAX_ATTEMPTS, accept: accept });
     state = gated.state;
-    document.getElementById('seed').textContent = '海底编号 #' + state.seed;
     return gated;
   }
 
@@ -590,6 +773,11 @@
     /* 高亮可点的格子 */
     var cell = state && s.highlight >= 0 ? document.querySelector('.cell[data-idx="' + s.highlight + '"]') : null;
     if (cell && cell.classList) { cell.classList.add('tut-target'); }
+    /* 可选：同时高亮 HUD 板块（沿用每屏开头的清理） */
+    if (s.hudHighlight) {
+      var hudEl = document.querySelector(s.hudHighlight);
+      if (hudEl && hudEl.classList) { hudEl.classList.add('tut-hud-hi'); }
+    }
 
     /* 第 6 屏：高亮当前子步指向的 HUD 元素 */
     if (s.mission === 'door-reward') {
@@ -756,6 +944,12 @@
     }, 1800);
   }
 
+  /* 教学开瓶加氧：和正式游戏同一条规则 */
+  function tutChestGain() {
+    var mult = (state.doorOpened || state.revealedAll) ? 2 : 1;
+    return (state.cfg.chestOxy || 0) * mult;
+  }
+
   /* 教学里的一次点击 */
   /* TUTOPEN */
   function tutOpen(idx) {
@@ -780,14 +974,35 @@
       }
       if (TUT_STEP === 1) {
         TUT_STEP = 2;
+        _sdm.highlight = _sdm.extraChest;
+        _sdm.hudHighlight = '#stat-bottle-box';
+        _sdm.allow = [_sdm.extraChest];
+        tutPaint();
+        $val('tut-text', '出现漩涡后，拾取的氧气瓶奖励×2');
+        $val('tut-sub', '');
+        setHint('点一下还没开的氧气瓶，注意氧气变化', true);
+        return;
+      }
+      if (TUT_STEP === 2) {
+        if (idx !== _sdm.extraChest) { return; }
+        var before7 = state.oxygen;
+        var gain7 = tutChestGain();
+        state.open[idx] = DeepDiveTutorial.OPEN_CHEST;
+        state.oxygen += gain7;
+        state.collected += 1;
+        U.render(state);
+        TUT_STEP = 3;
+        _sdm.highlight = _sdm.door;
+        _sdm.hudHighlight = '';
+        _sdm.allow = [_sdm.door];
+        tutPaint();
         $val('tut-text', _sdm.swirlBeatText || '点击漩涡进入下一关。');
         $val('tut-sub', '');
         setHint('请点击漩涡。', true);
         return;
       }
-      /* 第三拍：点漩涡才弹框 */
-      if (idx === _sdm.door) {
-        dlog('[TUT] 第7屏 点漩涡 → 弹「已找到出口」');
+      if (TUT_STEP === 3 && idx === _sdm.door) {
+        dlog('[TUT] 第7屏 点漩涡 → 弹已找到出口');
         TUT_WAIT_TAP = true;
         openExitDialog();
       }
@@ -856,7 +1071,7 @@
       var isChest = state.board.cells[idx] === DeepDiveTutorial.CHEST;
       state.open[idx] = isChest ? DeepDiveTutorial.OPEN_CHEST : DeepDiveTutorial.OPEN_SAFE;
       if (isChest) {
-        state.oxygen += s.chestOxy;
+        state.oxygen += tutChestGain();
         state.collected += 1;
         $val('tut-hint', '氧气增加');
       } else {
@@ -872,7 +1087,7 @@
       if (state.open[idx] !== DeepDiveTutorial.HIDDEN) { return; }
       if (state.board.cells[idx] !== DeepDiveTutorial.CHEST) { return; }   /* 雷只能标记 */
       state.open[idx] = DeepDiveTutorial.OPEN_CHEST;
-      state.oxygen += s.chestOxy;
+      state.oxygen += tutChestGain();
       state.collected += 1;
       U.render(state);
       $val('tut-hint', '氧气增加');
@@ -880,6 +1095,7 @@
       return;
     }
     if (s.mission === 'demo-then-mark') {
+      if (s.autoClearOnMark && TUT_WAIT_TAP) { TUT_WAIT_TAP = false; tutAdvance(); return; }
       if (idx !== s.demoIdx) { return; }
       if (TUT_SNAP) { return; }        /* 演示中不接受点击 */
       tutDemo(idx, s.markHint || s.demoHint, s.demoText);
@@ -923,11 +1139,15 @@
             U.paintAutoClear(ac.revealed);
             U.playSonar(ac.revealed, state.cfg.cols);   /* 正式游戏同一套动效 */
           }
-          var hEl = document.getElementById('tut-hint');
-          if (hEl) { hEl.textContent = '看，剩下的格子免费翻开了。'; hEl.className = 'tut-hint warn'; }
+          /* 清场后停住：讲解 + 黄字「点任意处继续」，等玩家点 */
+          $val('tut-text', '标完所有暗礁，剩下的格子会被免费翻开。');
+          $val('tut-sub', '');
+          setContinue();
+          TUT_WAIT_TAP = true;
         }, 500);
       }
-      window.setTimeout(tutAdvance, 1200);   /* 标记动画 500ms + 停顿 700ms */
+      if (s.autoClearOnMark) { return true; }   /* 第 8 屏不自动推进 */
+      window.setTimeout(tutAdvance, 1200);   /* 第 3 屏：标记动画 500ms + 停顿 700ms */
       return true;
     }
     if (s.mission === 'solve-purple') {
@@ -1153,8 +1373,6 @@
     U.setDepthLabel('试玩 ' + b.id);
     U.setHintLeft(0);
     U.render(state);
-    document.getElementById('seed').textContent =
-      (b.label ? b.label + '　·　' : '') + '紫比例 ' + (b.purple * 100).toFixed(1) + '%　首点请点 E5';
     return true;
   }
 
@@ -1202,7 +1420,7 @@
       phase = 'ended';
       DeepDiveResult.show({
         skin: 'win',
-        perfect: (run.hits || 0) === 0,
+        badge: badgeKind(run),
         rows: [
           { k: '海底编号', v: '#' + String(run.seed || 0) },
           { k: '本次用时', v: DeepDiveResult.fmtDur(run.activeMs) },
@@ -1379,7 +1597,7 @@
     if (!s2) { return; }
     var t2 = ev.target;
     if (t2 && (t2.closest && t2.closest('.cell'))) { return; }   /* 格子交给 onOpen */
-    if (s2.kind === 'tap' || s2.mission === 'door-manual' || TUT_WAIT_TAP || s2.mission === 'hud-steps' || s2.mission === 'clear-cell') {
+    if (s2.kind === 'tap' || s2.mission === 'door-manual' || TUT_WAIT_TAP || s2.mission === 'hud-steps' || s2.mission === 'clear-cell' || (s2.mission === 'demo-then-mark' && TUT_WAIT_TAP)) {
       tutOpen(-1);
     }
   });
@@ -1393,6 +1611,10 @@
     cv.style.height = '1334px';
     return cv;
   };
+  window.__winNow = showResultWin;
+  window.__showRevive = showRevive;
+  window.__reviveByAd = reviveByAd;
+  window.__diveSetOxy = function (v) { if (state) { state.oxygen = v; U.render(state); } };
   window.__tutStart = startTutorial;
   window.__tutExit = endTutorial;
   window.__tutJump = function (i) {
@@ -1432,7 +1654,7 @@
   } else {
     if (savedRun && savedRun.depth > 0 && savedRun.oxygen > 0) {
       run = savedRun;
-      var capNow = 100 + Math.min(Math.max((run.depth || 1) - 1, 0), 50);
+    var capNow = 100;
       if (run.oxygen > capNow) { run.oxygen = capNow; }
     } else {
       run = R.create(nextSeed());

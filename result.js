@@ -40,10 +40,12 @@
 
   var handlers = { primary: null, home: null };
 
+  /* 每次打开结算时重新读（玩家可能中途改了设置）；游戏内开关优先 */
   var reduceMotion = false;
-  try {
-    reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  } catch (e) { reduceMotion = false; }
+  function refreshMotion() {
+    if (window.DeepDiveUI && DeepDiveUI.reducedMotion) { reduceMotion = DeepDiveUI.reducedMotion(); return; }
+    reduceMotion = document.body && document.body.classList.contains('reduce-motion');
+  }
 
   /* 粒子：只在进场时建一次节点，动画交给 CSS */
   function buildParticles(layer, skin) {
@@ -85,6 +87,7 @@
 
   function show(opts) {
     opts = opts || {};
+    refreshMotion();   /* 每次打开都重新判定 */
     var skin = opts.skin === 'win' ? 'win' : 'lose';
     var layer = $('result-layer');
     if (!layer) { return; }
@@ -100,9 +103,11 @@
 
     var badge = $('result-badge');
     if (badge) {
-      var showBadge = skin === 'win' && opts.perfect;
-      badge.hidden = !showBadge;
-      badge.textContent = showBadge ? '完美推理' : '';
+      /* badge: 'perfect' | 'clean' | null（perfect 优先，不叠加） */
+      var kind = (skin === 'win') ? (opts.badge || (opts.perfect ? 'perfect' : null)) : null;
+      badge.hidden = !kind;
+      badge.className = 'result-badge' + (kind === 'clean' ? ' clean' : '');
+      badge.textContent = kind === 'perfect' ? '完美推理' : (kind === 'clean' ? '零撞礁' : '');
     }
 
     var body = $('result-rows');
@@ -113,7 +118,7 @@
       for (var i = 0; i < rows.length; i++) {
         var row = document.createElement('div');
         row.className = 'result-row';
-        row.style.setProperty('--i', i);
+        row.style.setProperty('--i', reduceMotion ? 0 : i);
         var k = document.createElement('span');
         k.className = 'rk';
         k.textContent = rows[i].k;
@@ -137,8 +142,8 @@
       layer.classList.add('anim');
       for (var j = 0; j < rollJobs.length; j++) {
         (function (job) {
+          if (reduceMotion) { rollNumber(job.el, job.n, job.unit); return; }
           var delay = 1000 + job.i * 120;
-          if (reduceMotion) { return; }
           window.setTimeout(function () { rollNumber(job.el, job.n, job.unit); }, delay);
         })(rollJobs[j]);
       }

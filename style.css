@@ -310,6 +310,10 @@ body {
   animation: oxy-pulse 1.5s ease-in-out infinite;
 }
 
+/* 警戒档：橙黄，不闪 */
+.stat.oxy.warnly .v { color: #f0a63c; }
+.stat.oxy.warnly .bar i { background: linear-gradient(90deg, #e08a2f, #ffc861); }
+
 @keyframes oxy-pulse {
   0%, 100% { opacity: 1; box-shadow: 0 0 0 rgba(255, 92, 92, 0); }
   50% { opacity: .62; box-shadow: 0 0 10px rgba(255, 92, 92, .55); }
@@ -342,7 +346,7 @@ body {
               inset 0 0 0 1px var(--cell-edge),
               0 1px 2px rgba(0, 0, 0, .38);
   /* 数字调大一档（约 +15%），格子尺寸不变 */
-  font-size: clamp(16.5px, 4.4vmin, 27.5px);
+  font-size: clamp(19px, 5.1vmin, 31.5px);
   font-weight: 800;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -679,12 +683,14 @@ body {
 .hint .k { color: var(--mark-fg); font-weight: 700; }
 
 .meta { display: flex; align-items: center; gap: 10px; }
-
-.seed {
-  font-size: 10px;
-  color: var(--text-faint);
-  font-variant-numeric: tabular-nums;
+.meta .btn {
+  white-space: nowrap;
+  font-size: 12px;
+  padding-left: 20px;
+  padding-right: 20px;
 }
+
+
 
 
 
@@ -1428,6 +1434,13 @@ body.tut-on.tut-hud .foot { display: none !important; }
   background: linear-gradient(180deg, #10283a 0%, #081826 100%);
 }
 
+.result-mode {
+  text-align: center;
+  font: 600 12px/1.2 inherit;
+  color: rgba(180, 210, 230, .65);
+  letter-spacing: .12em;
+  margin-bottom: 8px;
+}
 .result-kicker {
   font: 700 12px/1.4 sans-serif;
   letter-spacing: .12em;
@@ -1726,11 +1739,60 @@ body.tut-on.tut-hud .foot { display: none !important; }
 }
 .home-mode .home-caret { opacity: .5; }
 
+/* 模式下拉：主行是触发按钮，列表绝对定位浮在下面 */
+.home-mode-list { position: relative; }
+.home-mode-trigger { width: 100%; font-family: inherit; text-align: left; }
+.home-mode-menu {
+  position: absolute;
+  left: 0; right: 0; top: calc(100% + 6px);
+  z-index: 40;
+  padding: 6px;
+  border-radius: 12px;
+  border: 1px solid rgba(120, 200, 240, .22);
+  background: rgba(8, 22, 34, .98);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .45);
+  display: flex; flex-direction: column; gap: 2px;
+  animation: mode-in 120ms ease-out;
+}
+.home-mode-menu[hidden] { display: none; }
+@keyframes mode-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.home-mode-item {
+  padding: 10px 12px;
+  border-radius: 8px;
+  font: 600 14px/1.4 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: #dceefc;
+  cursor: pointer;
+}
+.home-mode-item:hover { background: rgba(120, 200, 240, .10); }
+.home-mode-item.is-active { color: #8fe3c6; }
+.home-mode-item.is-active::before { content: '✓ '; }
+.home-mode-item.is-disabled {
+  color: rgba(220, 238, 252, .38);
+  font-weight: 500;
+  cursor: default;
+  pointer-events: none;   /* 点不到，也不会有 hover */
+}
+
 .home-tut {
   width: 100%;
   padding: 12px 0;
   border-radius: 12px;
   font-size: 15px;
+  margin-bottom: 18px;   /* 删掉「第一次玩，建议先看」后补回这一行的间距 */
+}
+
+/* 首次进入：教学按钮呼吸光晕（reduce-motion 时靠 animation 被关掉 = 常亮） */
+.home-tut.tut-guide {
+  border-color: rgba(99, 224, 196, .6);
+  box-shadow: 0 0 0 2px rgba(99, 224, 196, .45), 0 0 22px rgba(99, 224, 196, .35);
+  animation: tut-guide-pulse 2s ease-in-out infinite;
+}
+@keyframes tut-guide-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(99, 224, 196, .22), 0 0 12px rgba(99, 224, 196, .16); }
+  50%      { box-shadow: 0 0 0 2px rgba(99, 224, 196, .55), 0 0 28px rgba(99, 224, 196, .45); }
 }
 .home-note {
   margin: 0;
@@ -1779,13 +1841,13 @@ body.tut-on.tut-hud .foot { display: none !important; }
 }
 
 .home-toast {
-  position: absolute; left: 50%; bottom: 14%;
+  position: fixed; left: 50%; bottom: 14%;
   transform: translateX(-50%) translateY(8px);
   padding: 9px 16px; border-radius: 999px;
   background: rgba(6, 18, 28, .95); border: 1px solid rgba(120, 200, 240, .25);
   color: #eaf6ff; font: 600 13px/1.4 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
   opacity: 0; pointer-events: none; transition: opacity .18s ease, transform .18s ease;
-  z-index: 70; white-space: nowrap;
+  z-index: 120; white-space: nowrap;   /* 高于设置/反馈面板（95）与 banner（70） */
 }
 .home-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
@@ -1864,3 +1926,97 @@ html, body {
 }
 .cell.marked::before { transform: translate(-50%, -50%) rotate(45deg); }
 .cell.marked::after  { transform: translate(-50%, -50%) rotate(-45deg); }
+
+
+/* ---------- 设置面板（临时） ---------- */
+.settings-layer {
+  position: fixed; inset: 0; z-index: 95;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(2, 8, 14, .72);
+  backdrop-filter: blur(2px);
+}
+.settings-layer[hidden] { display: none; }
+.settings-card {
+  width: min(320px, calc(100vw - 40px));
+  box-sizing: border-box;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(120, 200, 240, .22);
+  background: rgba(8, 22, 34, .98);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, .5);
+  color: #dceefc;
+}
+.settings-title { font: 700 16px/1.3 inherit; margin-bottom: 12px; text-align: center; }
+.settings-row {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 12px 0; background: none; border: 0; color: inherit;
+  font: 600 14px/1.4 inherit; cursor: pointer;
+}
+.settings-switch {
+  width: 44px; height: 26px; border-radius: 13px; flex: 0 0 auto;
+  background: rgba(120, 200, 240, .18); border: 1px solid rgba(120, 200, 240, .3);
+  position: relative; transition: background .18s ease;
+}
+.settings-switch i {
+  position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
+  border-radius: 50%; background: #9fc4d8; transition: transform .18s ease, background .18s ease;
+}
+.settings-row[aria-checked="true"] .settings-switch { background: rgba(99, 224, 196, .45); }
+.settings-row[aria-checked="true"] .settings-switch i { transform: translateX(18px); background: #8fe3c6; }
+.settings-note { margin: 6px 0 16px; font: 500 12px/1.5 inherit; color: rgba(220, 238, 252, .5); }
+.settings-card .btn { width: 100%; }
+
+.feedback-wx {
+  margin: 10px 0 14px;
+  padding: 14px 10px;
+  border-radius: 12px;
+  border: 1px dashed rgba(120, 200, 240, .45);
+  background: rgba(120, 200, 240, .08);
+  text-align: center;
+  font: 700 22px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: .06em;
+  color: #bfe9ff;
+  user-select: all;
+  -webkit-user-select: all;
+}
+.feedback-divider {
+  height: 1px; margin: 14px 0;
+  background: rgba(120, 200, 240, .3);
+}
+.feedback-late { margin: 12px 0 18px; text-align: center; }
+.settings-card .btn + .btn { margin-top: 0; }
+
+.result-badge.clean {
+  background: linear-gradient(180deg, #cfe9f6, #9fc4d8);
+  color: #07202e;
+  font-size: 13px;
+  padding: 5px 14px;
+}
+.revive-title { font-size: 22px; font-weight: 800; text-align: center; margin-bottom: 10px; }
+.revive-body { text-align: center; }
+.revive-oxy {
+  display: flex; align-items: baseline; justify-content: center; gap: 6px;
+  margin: 4px 0 16px; color: #bfe9ff;
+}
+.revive-oxy-num { font: 700 34px/1.1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.revive-oxy-unit { font: 600 16px/1.1 inherit; color: rgba(191, 233, 255, .8); }
+.revive-actions { display: flex; flex-direction: column; gap: 12px; }
+/* 复活框两个按钮同宽等高（覆盖 .btn + .btn 的 margin-top:0 与 primary 的 padding 差） */
+.revive-actions .btn {
+  width: 100%; box-sizing: border-box;
+  min-height: 46px;
+  padding: 12px 16px;
+  margin: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+}
+
+/* ---------- 减少动态效果：一条规则盖全部 ---------- */
+body.reduce-motion *:not(.animation-keep),
+body.reduce-motion *:not(.animation-keep)::before,
+body.reduce-motion *:not(.animation-keep)::after {
+  animation-duration: .001ms !important;
+  animation-delay: 0ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: .001ms !important;
+}

@@ -198,9 +198,6 @@ var DeepDiveUI = (function () {
       chip.hidden = true;
     }
 
-    if (window.__DIVE_DEBUG) { console.log('[RESTART] 写 stat-oxy 前 state.oxygen=' + state.oxygen); }
-    $('stat-oxy').textContent = String(state.oxygen);
-    if (window.__DIVE_DEBUG) { var _el2 = document.getElementById('stat-oxy'); console.log('[RESTART] 写后 DOM=' + (_el2 ? _el2.textContent : 'null')); }
 
     /* 通关是一个「标记」，不是结束 —— 达标后这里变绿，游戏继续 */
     $('stat-bottle-box').classList.toggle('cleared', !!state.cleared);
@@ -213,17 +210,7 @@ var DeepDiveUI = (function () {
 
 
     var fill = $('oxy-fill');
-    fill.style.width = pct + '%';
-    if (pct <= 40) { fill.classList.add('low'); } else { fill.classList.remove('low'); }
-    if (pct <= 40) { $('stat-oxy-box').classList.add('low'); } else { $('stat-oxy-box').classList.remove('low'); }
 
-    /* 满氧：给个明确提示，别让玩家以为还能再涨 */
-    var oxyBox = $('stat-oxy-box');
-    if (oxyBox) {
-      var capNow = state.cfg.oxygenCap || 100;
-      if (state.oxygen >= capNow) { oxyBox.classList.add('full'); }
-      else { oxyBox.classList.remove('full'); }
-    }
 
     applyHudLabels();
     for (var i = 0; i < cellEls.length; i++) {
@@ -350,14 +337,30 @@ var DeepDiveUI = (function () {
     setTimeout(function () { bar.classList.remove('grow', 'shake'); }, 620);
   }
 
-  /* 氧气低于 30：整条转红并持续脉动 */
-    if (window.__DIVE_DEBUG) { var _el = document.getElementById('stat-oxy'); console.log('[RESTART] DOM 实际显示 = ' + (_el ? _el.textContent : 'null')); }
+  /* 氧气三档：致命(红闪)/警戒(橙黄)/安全，唯一写入点 */
   function paintOxygen(state) {
-    if (window.__DIVE_DEBUG) { console.log('[RESTART] paintOxygen 被调用（只切 critical 类，不写数字）state.oxygen=' + state.oxygen); }
+    if (!state || !state.cfg) { return; }
     var box = $('stat-oxy-box');
     if (!box) { return; }
-    if (state.oxygen < 30) { box.classList.add('critical'); }
-    else { box.classList.remove('critical'); }
+    /* 数字 + 血条：唯一写入点 */
+    var num = $('stat-oxy');
+    if (num) { num.textContent = String(state.oxygen); }
+    var cap = state.cfg.oxygenCap || 100;
+    var pct = Math.min(100, Math.max(0, state.oxygen) / cap * 100);
+    var fill = $('oxy-fill');
+    if (fill) { fill.style.width = pct + '%'; }
+    /* 满氧 */
+    box.classList.remove('full');
+    if (state.oxygen >= cap) { box.classList.add('full'); }
+    /* 三档：先清再加，互斥 */
+    box.classList.remove('critical');
+    box.classList.remove('warnly');
+    var isTut = document.body && document.body.classList && document.body.classList.contains('tut-on');
+    if (isTut) { return; }   /* 教学关永远安全档 */
+    var hit = state.cfg.mineCost || 20;
+    var oxy = state.oxygen;
+    if (oxy <= hit) { box.classList.add('critical'); }
+    else if (oxy <= hit * 2) { box.classList.add('warnly'); }
   }
 
   /* 暗礁计数：未撞到 / 总数（棋盘没铺时一颗都没撞，所以 total/total） */
@@ -494,7 +497,7 @@ var DeepDiveUI = (function () {
     var old = host.querySelector ? host.querySelector('.clear-banner') : null;
     if (old && old.parentNode && old.parentNode.removeChild) { old.parentNode.removeChild(old); }
     var el = document.createElement('div');
-    el.className = 'clear-banner' + (cls ? ' ' + cls : '');
+    el.className = 'clear-banner animation-keep' + (cls ? ' ' + cls : '');
     var b = document.createElement('b');
     b.textContent = mainText;
     el.appendChild(b);
@@ -931,7 +934,18 @@ function clearHint() {
     bindInput();
   }
 
+  /* 减少动态效果：游戏内开关优先，其次系统设置。每次调用都重新读。 */
+  function reducedMotion() {
+    if (document.body && document.body.classList && document.body.classList.contains('reduce-motion')) {
+      return true;
+    }
+    try {
+      return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    } catch (e) { return false; }
+  }
+
   return {
+    reducedMotion: reducedMotion,
     init: init,
     render: render,
     playEvents: playEvents,
