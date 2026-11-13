@@ -1,11 +1,16 @@
 <!DOCTYPE html>
+<!--
+  缓存版本号：?v=17
+  ⚠️ 每次发版必须把本文件里所有 ?v=17 改成新版本号（脚本/样式一起改），
+     否则微信 WebView / 浏览器会继续用旧缓存，出现「改了没生效」。
+-->
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#050b14">
 <title>深潜</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=17">
 
 </head>
 <body>
@@ -14,6 +19,7 @@
 <div id="fatal-bar" class="fatal-bar" hidden></div>
 
 <div class="app">
+  <div class="bg-layer" id="bg-layer" aria-hidden="true"></div>
 
   <header class="hud">
     <div class="hud-row">
@@ -62,7 +68,24 @@
     </div>
 
     <!-- 结算界面：通关 / 失败共用骨架，skin 区分 -->
-    <!-- 设置面板（临时：目前只有「减少动态效果」一项） -->
+    </main>
+
+  <footer class="foot">
+    <div class="hint">
+      <span class="r">红</span>暗礁　<span class="b">蓝</span>氧气瓶　<span class="m">紫</span>混合<br>
+      点一下翻开　<span class="k">长按</span>标记暗礁<br>
+
+    </div>
+    <div class="meta">
+      <button class="btn" id="hint-btn">提示 剩3次</button>
+      <button class="btn" id="restart">重新下潜</button>
+      <button class="btn" id="home-btn">返回首页</button>
+    </div>
+  </footer>
+
+</div>
+
+  <!-- 设置面板（临时：目前只有「减少动态效果」一项） -->
   <div class="settings-layer" id="settings-layer" hidden>
     <div class="settings-card" role="dialog" aria-modal="true" aria-label="设置">
       <div class="settings-title">设置</div>
@@ -119,22 +142,6 @@
         </div>
       </div>
     </div>
-  </main>
-
-  <footer class="foot">
-    <div class="hint">
-      <span class="r">红</span>暗礁　<span class="b">蓝</span>氧气瓶　<span class="m">紫</span>混合<br>
-      点一下翻开　<span class="k">长按</span>标记暗礁<br>
-
-    </div>
-    <div class="meta">
-      <button class="btn" id="hint-btn">提示 剩3次</button>
-      <button class="btn" id="restart">重新下潜</button>
-      <button class="btn" id="home-btn">返回首页</button>
-    </div>
-  </footer>
-
-</div>
 
 <noscript>
   <p style="color:#cfe3f5;text-align:center">这个原型需要开启 JavaScript。</p>
@@ -182,23 +189,24 @@
     </div>
   </div>
 
-<script src="logic.js"></script>
-<script src="solver.js"></script>
-<script src="generator.js"></script>
-<script src="hint.js"></script>
-<script src="mode.js"></script>
-  <script src="calib.js"></script>
-  <script src="shape.js"></script>
-  <script src="ladder.js"></script>
-  <script src="tutorial.js"></script>
-  <script src="modifiers.js"></script>
-<script src="run.js"></script>
-<script src="ui.js"></script>
-<script src="result.js"></script>
-<script src="poster.js"></script>
-<script src="boards.js"></script>
-  <script src="boards-picked.js"></script>
-  <script src="main.js"></script>
+<script src="logic.js?v=17"></script>
+<script src="solver.js?v=17"></script>
+<script src="generator.js?v=17"></script>
+<script src="hint.js?v=17"></script>
+<script src="mode.js?v=17"></script>
+  <script src="calib.js?v=17"></script>
+  <script src="shape.js?v=17"></script>
+  <script src="ladder.js?v=17"></script>
+  <script src="tutorial.js?v=17"></script>
+  <script src="modifiers.js?v=17"></script>
+<script src="run.js?v=17"></script>
+<script src="ui.js?v=17"></script>
+<script src="result.js?v=17"></script>
+<script src="poster.js?v=17"></script>
+<script src="bg.js?v=17"></script>
+<script src="boards.js?v=17"></script>
+  <script src="boards-picked.js?v=17"></script>
+  <script src="main.js?v=17"></script>
 
   <div id="confirm-dive" class="confirm-layer" hidden>
     <div class="confirm-box">

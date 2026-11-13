@@ -1,4 +1,4 @@
-﻿/* 深潜 · 原型样式
+/* 深潜 · 原型样式
  *
  * 原则（DESIGN v0.6 视觉规范）：
  *   1. 格子底色统一中性，不随内容变化。含义只由数字颜色和图标承载。
@@ -2020,3 +2020,71 @@ body.reduce-motion *:not(.animation-keep)::after {
   animation-iteration-count: 1 !important;
   transition-duration: .001ms !important;
 }
+
+
+/* ---------- 程序化背景（bg.js） ---------- */
+
+/* ---------- background：four elements, CSS only (v13) ---------- */
+.bg-layer {
+  position: fixed; inset: 0; z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  background: #050f18;
+}
+.app { isolation: isolate; }   /* stacking context for .app */
+
+.bg-scene { position: absolute; inset: 0; overflow: hidden; }
+.bg-base { position: absolute; inset: 0; }
+
+.bg-shafts { position: absolute; inset: 0; mix-blend-mode: screen; }
+.bg-shaft {
+  position: absolute; display: block;
+  animation-name: bg-shaft-breathe;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+@keyframes bg-shaft-breathe {
+  0%, 100% { opacity: .30; }
+  50%      { opacity: .85; }
+}
+
+.bg-bubbles, .bg-sparks { position: absolute; inset: 0; pointer-events: none; }
+
+.bg-bubble {
+  position: absolute;
+  border-radius: 50%;
+  border-style: solid;
+  border-color: rgba(111, 208, 224, .80);
+  background: radial-gradient(circle, rgba(111, 208, 224, .08) 0%, transparent 70%);
+  animation-name: bg-bubble-rise;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@keyframes bg-bubble-rise {
+  0%   { transform: translate3d(0, 0, 0); opacity: 0; }
+  5%   { opacity: 1; }
+  50%  { transform: translate3d(10px, -55vh, 0); opacity: 1; }
+  95%  { opacity: 1; }
+  100% { transform: translate3d(-10px, -110vh, 0); opacity: 0; }
+}
+.bg-bubble-static { animation: none; opacity: .7; }
+
+.bg-spark {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+              rgba(255, 255, 255, .95) 0%,
+              var(--c, #8fd8e8) 35%,
+              transparent 75%);
+  animation-name: bg-spark-drift;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+@keyframes bg-spark-drift {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(var(--dx, 20px), var(--dy, -20px), 0); }
+}
+.bg-spark-static { animation: none; }
+
+/* reduce-motion：气泡不上升，固定原位（其余靠全局规则静止） */
+body.reduce-motion .bg-bubble { animation: none !important; opacity: .7; }

@@ -180,6 +180,13 @@
     el._t = window.setTimeout(function () { el.classList.remove('show'); }, ms || 1800);
   }
 
+  /* ---------- 程序化背景：每次启动一个 salt，进层时生成一次 ---------- */
+  var BG_SALT = (Math.random() * 0x7fffffff) | 0;
+  function paintBackground() {
+    var bgApi = (typeof window !== 'undefined' && window.DeepDiveBg) ? window.DeepDiveBg : null;
+    if (!bgApi) { return; }
+    try { bgApi.apply(run.depth, run.seed, BG_SALT); } catch (e) { /* 背景失败不影响游戏 */ }
+  }
   /* ---------- 首次进入：教学按钮引导 ---------- */
   var VISITED_KEY = 'dd-visited';
   function markVisited() {
@@ -535,6 +542,7 @@
       U.setDepth(run.depth);
       U.setHintLeft(run.hintsLeft);
       U.render(state);
+    paintBackground();   /* 背景只在进层时生成一次，不在 render 里 */
       var restoredMods = DeepDiveModifiers.short(run.mods);
       U.setMods(restoredMods);
       return;
@@ -565,6 +573,7 @@
     U.setDepth(run.depth);
     U.setHintLeft(run.hintsLeft);
     U.render(state);
+    paintBackground();   /* 新铺一层：背景也只在这里生成一次 */
     if (run.depth >= 100) { U.showBanner('第 100 层', '撞上一次礁，就结束了', 2500, 'final'); }
     saveRun();
   }
