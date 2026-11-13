@@ -256,6 +256,8 @@
     layer.hidden = false;
     var sw = document.getElementById('reduce-motion-toggle');
     if (sw) { sw.setAttribute('aria-checked', motionOn() ? 'true' : 'false'); }
+    var sws = document.getElementById('sound-toggle');
+    if (sws) { sws.setAttribute('aria-checked', soundOn() ? 'true' : 'false'); }
   }
   function closeSettings() {
     var layer = document.getElementById('settings-layer');
