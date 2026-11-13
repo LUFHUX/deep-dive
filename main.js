@@ -204,6 +204,32 @@
   }
   applyFirstVisitGuide();
 
+  /* ---------- 音效 ---------- */
+  var SOUND_KEY = 'dd-sound';
+  function playSfx(name) {
+    try {
+      if (window.DeepDiveAudio && window.DeepDiveAudio.play) { window.DeepDiveAudio.play(name); }
+    } catch (e) { /* 静默 */ }
+  }
+  function soundOn() {
+    try { return !!(window.DeepDiveAudio && window.DeepDiveAudio.enabled()); } catch (e) { return false; }
+  }
+  function applySound(on) {
+    try { if (window.DeepDiveAudio && window.DeepDiveAudio.setEnabled) { window.DeepDiveAudio.setEnabled(!!on); } } catch (e) {}
+    var sw = document.getElementById('sound-toggle');
+    if (sw) { sw.setAttribute('aria-checked', on ? 'true' : 'false'); }
+  }
+  function initSoundPref() {
+    var saved = null;
+    try { saved = window.localStorage ? window.localStorage.getItem(SOUND_KEY) : null; } catch (e) { saved = null; }
+    applySound(saved === null ? true : saved === '1');
+  }
+  function toggleSoundPref() {
+    var next = !soundOn();
+    applySound(next);
+    try { if (window.localStorage) { window.localStorage.setItem(SOUND_KEY, next ? '1' : '0'); } } catch (e) {}
+  }
+
   /* ---------- 减少动态效果 ---------- */
   var MOTION_KEY = 'dd-reduce-motion';
   function motionOn() { return document.body.classList.contains('reduce-motion'); }
@@ -293,7 +319,7 @@
           extInfo: { url: '' },   /* TODO: 填 extInfo.url */
           corpId: '',             /* TODO: 填 corpId */
           success: function () {},
-          fail: function () { showToast('没打开', '请加微信 RIP_ME_OPEN', 1800); }
+          fail: function () { showToast('没打开', '请加微信 sere_rest', 1800); }
         });
         return;
       } catch (e) { /* 落到网页提示 */ }
@@ -301,6 +327,14 @@
     showToast('微信版开放后可直接联系；现在请加我微信。', '', 2200);
   }
   function homeFeedback() { openFeedback(); }
+  function openAuthor() {
+    var layer = document.getElementById('author-layer');
+    if (layer) { layer.hidden = false; }
+  }
+  function closeAuthor() {
+    var layer = document.getElementById('author-layer');
+    if (layer) { layer.hidden = true; }
+  }
   function homeAbout() {
     showToast('《深潜》 v' + APP_VERSION, '一片等你探索的未知海域', 2400);
   }
@@ -329,19 +363,34 @@
   document.addEventListener('click', function (ev) {
     var t = ev.target;
     if (!t || !t.closest) { return; }
+    if (t.closest('#sound-toggle')) { toggleSoundPref(); return; }
     if (t.closest('#reduce-motion-toggle')) { toggleMotionPref(); return; }
     if (t.closest('#settings-close')) { closeSettings(); return; }
     if (t.closest('#feedback-copy')) { copyWx(); return; }
     if (t.closest('#feedback-contact')) { contactDeveloper(); return; }
     if (t.closest('#feedback-close')) { closeFeedback(); return; }
+    if (t.closest('#author-close')) { closeAuthor(); return; }
     if (t.closest('#revive-ad')) { reviveByAd(); return; }
     if (t.closest('#revive-giveup')) { hideRevive(); finishLose(); return; }
     var layer = document.getElementById('settings-layer');
     if (layer && !layer.hidden && t === layer) { closeSettings(); }
     var fb = document.getElementById('feedback-layer');
     if (fb && !fb.hidden && t === fb) { closeFeedback(); }
+    var au = document.getElementById('author-layer');
+    if (au && !au.hidden && t === au) { closeAuthor(); }
   });
   initMotionPref();
+  initSoundPref();
+  try {
+    if (document.body && window.DeepDiveAudio && window.DeepDiveAudio.preload) { window.DeepDiveAudio.preload(); }
+  } catch (e) {}
+  try {
+    if (window.DeepDiveAudio && window.DeepDiveAudio.unlock) {
+      var unlockAudio = function () { try { window.DeepDiveAudio.unlock(); } catch (e) {} };
+      document.addEventListener('touchstart', unlockAudio, { once: true });
+      document.addEventListener('click', unlockAudio, { once: true });
+    }
+  } catch (e) {}
 
   /* 首页按钮：document 级委托（不依赖元素先存在） */
   document.addEventListener('click', function (ev) {
@@ -356,6 +405,7 @@
     else if (act === 'tutorial') { markVisited(); homeTutorial(); }
     else if (act === 'settings') { homeSettings(); }
     else if (act === 'feedback') { homeFeedback(); }
+    else if (act === 'author') { openAuthor(); }
     else if (act === 'about') { homeAbout(); }
     else if (act === 'mode') {
       toggleModeMenu();
@@ -375,6 +425,7 @@
 
   /* 结算展示：通关 / 失败共用一套行定义，真实流程和 ?win=1 / ?lose=1 都走这里 */
   function showResultWin() {
+    playSfx(badgeKind(run) === 'perfect' ? 'win-perfect' : 'win');
     DeepDiveResult.show({
       skin: 'win',
       badge: badgeKind(run),
@@ -400,6 +451,7 @@
   }
 
   function showResultLose(depth) {
+    playSfx('lose');
     run.activeMs = activeTotal();   /* 用时用真实活跃时长，别拿旧值 */
     var d = depth || run.depth;
     DeepDiveResult.show({
@@ -599,6 +651,7 @@
 
   /* 失败结算（复活次数用完后 / 认输） */
   function finishLose() {
+    playSfx('lose');
     phase = 'ended';
     var best = R.isNewRecord(records, run);
     records = R.updateRecords(records, run);
@@ -1219,6 +1272,21 @@
     if (!wasPractice) { tryAutoClear(); }
     U.render(state);
     U.playEvents(res.events);
+    /* 音效：瓶子 > 撞礁 > 开格（门本身不出声） */
+    (function () {
+      var hasBottle = false, hasMine = false, hasDoor = false;
+      for (var si = 0; si < res.events.length; si++) {
+        var st = res.events[si].type;
+        if (st === 'chest') { hasBottle = true; }
+        if (st === 'mine') { hasMine = true; }
+        if (st === 'door') { hasDoor = true; }
+      }
+      var openedNow = 0;
+      for (var so = 0; so < state.open.length; so++) { if (state.open[so] !== L.HIDDEN) { openedNow++; } }
+      if (hasBottle) { playSfx('bottle'); }
+      else if (hasMine) { playSfx('mine'); }
+      else if (!hasDoor && openedNow > prevOpened) { playSfx('open'); }
+    })();
 
     /* A3：开到门那一刻 —— 横幅提示「剩余氧气瓶 ×2」 */
     /* ---- 统计：翻开格数 / 氧气瓶 / 撞礁 ---- */
@@ -1284,6 +1352,7 @@
     if (!res.triggered) { return false; }
     state = res.state;
     U.paintAutoClear(res.revealed);
+    playSfx('reveal');
     U.playSonar(res.revealed, state.cfg.cols);
     /* 横幅错开 550ms：先让波浪扫出去，再报「扫描完成」 */
     setTimeout(function () { U.showBanner('海底扫描完成', '暗礁已全部标记', 1500, 'clear'); }, 550);
@@ -1414,6 +1483,7 @@
     if (!state.doorOpened) { return; }
     dropKey(SAVE_LEVEL);
     var wasLayer100 = (run.depth >= 100);
+    if (!wasLayer100) { playSfx('dive'); }
     run = R.dive(run, state);
     statLine('→');
     if (wasLayer100) {

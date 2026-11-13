@@ -681,8 +681,13 @@ body {
 .hint .m { color: var(--num-mixed); font-weight: 700; }
 .hint .g { color: var(--icon-gold); font-weight: 700; }
 .hint .k { color: var(--mark-fg); font-weight: 700; }
+.hint .y { color: var(--icon-gold); font-weight: 700; }
 
-.meta { display: flex; align-items: center; gap: 10px; }
+.meta {
+  display: flex; align-items: center; gap: 10px;
+  flex: 1 1 100%;
+  justify-content: space-between;
+}
 .meta .btn {
   white-space: nowrap;
   font-size: 12px;
@@ -1737,7 +1742,7 @@ body.tut-on.tut-hud .foot { display: none !important; }
   color: #dceefc;
   font: 600 14px/1.4 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
 }
-.home-mode .home-caret { opacity: .5; }
+.home-mode .home-caret { opacity: .75; font-size: 16px; line-height: 1; }
 
 /* 模式下拉：主行是触发按钮，列表绝对定位浮在下面 */
 .home-mode-list { position: relative; }
@@ -1831,6 +1836,7 @@ body.tut-on.tut-hud .foot { display: none !important; }
   font: 500 12px/1.4 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
   cursor: pointer;
 }
+.home-foot-right { display: flex; align-items: center; gap: 10px; }
 .home-foot-main {
   font-size: 15px;
   font-weight: 700;
@@ -1888,7 +1894,7 @@ body.tut-on.tut-hud .foot { display: none !important; }
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 10px;
 }
 .home-foot-main {
@@ -2088,3 +2094,65 @@ body.reduce-motion *:not(.animation-keep)::after {
 
 /* reduce-motion：气泡不上升，固定原位（其余靠全局规则静止） */
 body.reduce-motion .bg-bubble { animation: none !important; opacity: .7; }
+
+
+/* 支持作者面板 */
+.author-qr {
+  display: block;
+  width: 160px; height: 160px;
+  margin: 0 auto 14px;
+  border-radius: 12px;
+  object-fit: contain;
+}
+.author-thanks { text-align: center; }
+
+
+/* 首页底部：三列网格，左「支持作者」/ 中「设置」/ 右「反馈·关于」 */
+.home-foot {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+}
+.home-foot-main {
+  position: static;
+  transform: none;
+  grid-row: 1;
+  grid-column: 2;
+  justify-self: center;
+}
+.home-foot > .home-foot-btn[data-home-action="author"] {
+  grid-row: 1;
+  grid-column: 1;
+  justify-self: start;
+}
+.home-foot-right {
+  grid-row: 1;
+  grid-column: 3;
+  justify-self: end;
+}
+
+
+/* 首页底部最终布局：左 / 中 / 右三等分 */
+.home-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.home-foot > .home-foot-btn[data-home-action="author"] {
+  flex: 1 1 0;
+  text-align: left;
+}
+.home-foot-main {
+  position: static;
+  transform: none;
+  flex: 0 0 auto;
+}
+.home-foot-right {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}

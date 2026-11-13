@@ -23,15 +23,15 @@ var DeepDiveBg = (function () {
 
   /* 小亮点：数量 + 透明度随深度 */
   var SPARKS = [
-    { from: 1,  to: 20,  n: [6, 10],  op: [0.35, 0.55] },
-    { from: 21, to: 40,  n: [10, 15], op: [0.30, 0.50] },
-    { from: 41, to: 60,  n: [15, 22], op: [0.24, 0.42] },
-    { from: 61, to: 80,  n: [22, 30], op: [0.18, 0.34] },
-    { from: 81, to: 100, n: [32, 44], op: [0.12, 0.26] }
+    { from: 1,  to: 20,  n: [6, 10],  op: [0.18, 0.55] },
+    { from: 21, to: 40,  n: [10, 15], op: [0.15, 0.50] },
+    { from: 41, to: 60,  n: [15, 22], op: [0.12, 0.42] },
+    { from: 61, to: 80,  n: [22, 30], op: [0.09, 0.34] },
+    { from: 81, to: 100, n: [32, 44], op: [0.07, 0.26] }
   ];
 
   var BUBBLE_SIZES = [5, 8, 11, 14, 18, 23, 29, 36, 44, 54];
-  var SPARK_SIZES = [2, 3, 4, 5, 6];
+  var SPARK_SIZES = [5, 8, 11, 14, 18, 23, 29, 36, 44, 54];
 
   function skyFor(depth) {
     for (var i = 0; i < SKY.length - 1; i++) {
@@ -176,9 +176,11 @@ var DeepDiveBg = (function () {
     var n = seg.n[0] + Math.floor(rng() * (seg.n[1] - seg.n[0] + 1));
     var k = Math.min(1, (depth - 1) / 99);
     var color = mixHex('#8fd8e8', '#7a9bd0', k);
+    var capN = depth <= 20 ? 10 : (depth <= 50 ? 7 : (depth <= 80 ? 5 : 4));
+    var sizes = SPARK_SIZES.slice(0, capN);
 
     for (var i = 0; i < n; i++) {
-      var size = pick(rng, SPARK_SIZES);
+      var size = pick(rng, sizes);
       var op = (seg.op[0] + rng() * (seg.op[1] - seg.op[0])).toFixed(2);
       var isAnim = i < animated;
       var style = [

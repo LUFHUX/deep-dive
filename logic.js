@@ -439,11 +439,14 @@ var DeepDiveLogic = (function () {
         ev.push({ type: 'door', idx: target, oxygen: nb.oxygen });
       } else {
         var bbase = (nb.chestRare && nb.chestRare[target]) ? nb.cfg.chestRareOxy : nb.cfg.chestOxy;
-        var bgain = bbase * 2;
+        var bmult = (nb.doorOpened || nb.revealedAll) ? 2 : 1;
+        var bgain = bbase * bmult;
+        var bbefore = nb.oxygen;
         nb.open[target] = OPEN_CHEST;
         nb.collected += 1;
         nb.oxygen = Math.min(nb.cfg.oxygenCap, nb.oxygen + bgain);
-        ev.push({ type: 'chest', idx: target, collected: nb.collected, gained: bgain, doubled: true, oxygen: nb.oxygen });
+        var bactual = nb.oxygen - bbefore;
+        ev.push({ type: 'chest', idx: target, collected: nb.collected, gained: bactual, doubled: bmult === 2, oxygen: nb.oxygen });
       }
       return { state: nb, events: ev };
     }
@@ -501,11 +504,13 @@ var DeepDiveLogic = (function () {
         /* 门开之后，尚未开启的瓶子补给翻倍 */
         var mult = (next.doorOpened || next.revealedAll) ? 2 : 1;
         var gain = destroyed ? 0 : base * mult;
+        var before = next.oxygen;
         next.oxygen = next.oxygen + gain;
         if (next.oxygen > next.cfg.oxygenCap) { next.oxygen = next.cfg.oxygenCap; }
+        var actual = next.oxygen - before;
         events.push({
           type: 'chest', idx: target, collected: next.collected,
-          gained: gain, destroyed: destroyed, rare: !!(next.chestRare && next.chestRare[target]),
+          gained: actual, destroyed: destroyed, rare: !!(next.chestRare && next.chestRare[target]),
           doubled: mult > 1, oxygen: next.oxygen
         });
       }

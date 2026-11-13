@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
-  缓存版本号：?v=17
-  ⚠️ 每次发版必须把本文件里所有 ?v=17 改成新版本号（脚本/样式一起改），
+  缓存版本号：?v=20
+  ⚠️ 每次发版必须把本文件里所有 ?v=20 改成新版本号（脚本/样式一起改），
      否则微信 WebView / 浏览器会继续用旧缓存，出现「改了没生效」。
 -->
 <html lang="zh-CN">
@@ -10,7 +10,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#050b14">
 <title>深潜</title>
-<link rel="stylesheet" href="style.css?v=17">
+<link rel="stylesheet" href="style.css?v=20">
 
 </head>
 <body>
@@ -73,7 +73,7 @@
   <footer class="foot">
     <div class="hint">
       <span class="r">红</span>暗礁　<span class="b">蓝</span>氧气瓶　<span class="m">紫</span>混合<br>
-      点一下翻开　<span class="k">长按</span>标记暗礁<br>
+      点一下翻开　<span class="y">长按</span>标记暗礁<br>
 
     </div>
     <div class="meta">
@@ -89,11 +89,15 @@
   <div class="settings-layer" id="settings-layer" hidden>
     <div class="settings-card" role="dialog" aria-modal="true" aria-label="设置">
       <div class="settings-title">设置</div>
+      <button class="settings-row" id="sound-toggle" type="button" role="switch" aria-checked="true">
+        <span class="settings-label">音效</span>
+        <span class="settings-switch" aria-hidden="true"><i></i></span>
+      </button>
       <button class="settings-row" id="reduce-motion-toggle" type="button" role="switch" aria-checked="false">
         <span class="settings-label">减少动态效果</span>
         <span class="settings-switch" aria-hidden="true"><i></i></span>
       </button>
-      <p class="settings-note">关闭后不再显示闪光、粒子、滑入等效果。</p>
+      <p class="settings-note">开启后不再显示闪光、粒子、滑入等效果。</p>
       <button class="btn" id="settings-close" type="button">关闭</button>
     </div>
   </div>
@@ -117,12 +121,23 @@
     <div class="settings-card" role="dialog" aria-modal="true" aria-label="反馈">
       <div class="settings-title">反馈</div>
       <p class="settings-note">遇到问题、或者想说什么，加我微信：</p>
-      <div class="feedback-wx" id="feedback-wx">RIP_ME_OPEN</div>
+      <div class="feedback-wx" id="feedback-wx">sere_rest</div>
       <button class="btn primary" id="feedback-copy" type="button">复制微信号</button>
       <div class="feedback-divider"></div>
       <button class="btn" id="feedback-contact" type="button">联系开发者</button>
       <p class="settings-note feedback-late">回复可能不及时，见谅。</p>
       <button class="btn" id="feedback-close" type="button">关闭</button>
+    </div>
+  </div>
+
+
+  <!-- 支持作者面板 -->
+  <div class="settings-layer" id="author-layer" hidden>
+    <div class="settings-card" role="dialog" aria-modal="true" aria-label="支持作者">
+      <div class="settings-title">支持作者</div>
+      <img class="author-qr" id="author-qr" src="assets/support-qr.jpg" alt="微信收款码">
+      <p class="settings-note author-thanks">个人开发者创作不易，<br>喜欢该作品请支持作者，万分感谢。</p>
+      <button class="btn" id="author-close" type="button">关闭</button>
     </div>
   </div>
 
@@ -163,7 +178,7 @@
         <div class="home-mode-list" id="home-mode-list">
           <button class="home-mode home-mode-trigger" id="home-mode" data-home-action="mode"
                   type="button" aria-haspopup="listbox" aria-expanded="false">
-            <span>经典模式（100% 纯推理可解）</span><span class="home-caret">▾</span>
+            <span>经典模式（100% 纯推理可解）</span><span class="home-caret">▼</span>
           </button>
           <div class="home-mode-menu" id="home-mode-menu" hidden>
             <div class="home-mode-item is-active" data-home-action="mode-classic">经典模式（100% 纯推理可解）</div>
@@ -182,31 +197,35 @@
       </section>
 
       <footer class="home-foot">
+        <button class="home-foot-btn" data-home-action="author" type="button">支持作者</button>
         <button class="home-foot-btn home-foot-main" data-home-action="settings" type="button">设置</button>
-        <button class="home-foot-btn" data-home-action="feedback" type="button">反馈</button>
-        <button class="home-foot-btn" data-home-action="about" type="button">关于</button>
+        <div class="home-foot-right">
+          <button class="home-foot-btn" data-home-action="feedback" type="button">反馈</button>
+          <button class="home-foot-btn" data-home-action="about" type="button">关于</button>
+        </div>
       </footer>
     </div>
   </div>
 
-<script src="logic.js?v=17"></script>
-<script src="solver.js?v=17"></script>
-<script src="generator.js?v=17"></script>
-<script src="hint.js?v=17"></script>
-<script src="mode.js?v=17"></script>
-  <script src="calib.js?v=17"></script>
-  <script src="shape.js?v=17"></script>
-  <script src="ladder.js?v=17"></script>
-  <script src="tutorial.js?v=17"></script>
-  <script src="modifiers.js?v=17"></script>
-<script src="run.js?v=17"></script>
-<script src="ui.js?v=17"></script>
-<script src="result.js?v=17"></script>
-<script src="poster.js?v=17"></script>
-<script src="bg.js?v=17"></script>
-<script src="boards.js?v=17"></script>
-  <script src="boards-picked.js?v=17"></script>
-  <script src="main.js?v=17"></script>
+<script src="logic.js?v=20"></script>
+<script src="solver.js?v=20"></script>
+<script src="generator.js?v=20"></script>
+<script src="hint.js?v=20"></script>
+<script src="mode.js?v=20"></script>
+  <script src="calib.js?v=20"></script>
+  <script src="shape.js?v=20"></script>
+  <script src="ladder.js?v=20"></script>
+  <script src="tutorial.js?v=20"></script>
+  <script src="modifiers.js?v=20"></script>
+<script src="run.js?v=20"></script>
+<script src="ui.js?v=20"></script>
+<script src="result.js?v=20"></script>
+<script src="poster.js?v=20"></script>
+<script src="bg.js?v=20"></script>
+<script src="boards.js?v=20"></script>
+  <script src="boards-picked.js?v=20"></script>
+  <script src="audio.js?v=20"></script>
+<script src="main.js?v=20"></script>
 
   <div id="confirm-dive" class="confirm-layer" hidden>
     <div class="confirm-box">
