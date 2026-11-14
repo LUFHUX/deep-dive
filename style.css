@@ -643,7 +643,7 @@ body {
   font-family: inherit;
   font-size: 13px;
   cursor: pointer;
-  transition: background .15s ease, border-color .15s ease;
+  transition: background .15s ease, border-color .15s ease, transform 120ms ease;
 }
 
 .btn:hover {
@@ -2155,4 +2155,51 @@ body.reduce-motion .bg-bubble { animation: none !important; opacity: .7; }
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
+}
+
+
+/* ---------- 点击微动效：可点元素按下缩到 0.96 ---------- */
+.home-link, .home-mode, .home-mode-item,
+.home-foot-btn, .tut-skip, .hintbar-close {
+  transition: transform 120ms ease;
+}
+.btn:active, .home-link:active, .home-mode:active, .home-mode-item:active,
+.home-foot-btn:active, .tut-skip:active, .hintbar-close:active {
+  transform: scale(0.96);
+  transition-duration: 90ms;
+}
+/* 减少动态效果：只保留背景变化，不做缩放 */
+body.reduce-motion .btn:active,
+body.reduce-motion .home-link:active,
+body.reduce-motion .home-mode:active,
+body.reduce-motion .home-mode-item:active,
+body.reduce-motion .home-foot-btn:active,
+body.reduce-motion .tut-skip:active,
+body.reduce-motion .hintbar-close:active {
+  transform: none !important;
+}
+
+
+/* ---------- 背景涟漪（装饰，不承载信息） ---------- */
+.ripple-layer {
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(160, 225, 245, .30);
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 1;
+  animation: ripple-out 600ms ease-out forwards;
+}
+.ripple::after {
+  content: ''; position: absolute; inset: 22%;
+  border-radius: 50%;
+  border: 1px solid rgba(160, 225, 245, .38);
+}
+@keyframes ripple-out {
+  from { opacity: 1; }
+  to { transform: translate(-50%, -50%) scale(1); opacity: 0; }
 }

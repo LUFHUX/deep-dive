@@ -381,6 +381,60 @@
     var au = document.getElementById('author-layer');
     if (au && !au.hidden && t === au) { closeAuthor(); }
   });
+  /* ---------- 背景涟漪（纯装饰） ---------- */
+  (function () {
+    var RIP_BORN = 600;
+    var lastAt = 0;
+    var live = [];
+    function reduced() {
+      try { return document.body.classList.contains('reduce-motion'); } catch (e) { return false; }
+    }
+    function makeRipple(x, y) {
+      var host = document.getElementById('ripple-layer');
+      if (!host) { return; }
+      /* 首页有独立的不透明层（z60），涟漪在首页时必须抬到它上面；
+       * 进游戏后回到 z0，位于棋盘/内容之下。 */
+      var home = document.getElementById('home-layer');
+      var onHome = false;
+      try {
+        onHome = !!home && !home.hidden && home.getClientRects().length > 0;
+      } catch (e) { onHome = false; }
+      host.style.zIndex = onHome ? '61' : '0';
+      var size = 90 + Math.random() * 40;         /* 直径 90–130 */
+      var d = document.createElement('div');
+      d.className = 'ripple';
+      d.style.cssText = 'left:' + x + 'px;top:' + y + 'px;width:' + size + 'px;height:' + size + 'px';
+      host.appendChild(d);
+      live.push(d);
+      if (live.length > 3) {
+        var old = live.shift();
+        try { if (old && old.parentNode) { old.parentNode.removeChild(old); } } catch (e) {}
+      }
+      window.setTimeout(function () {
+        try { if (d.parentNode) { d.parentNode.removeChild(d); } } catch (e) {}
+        var i = live.indexOf(d);
+        if (i >= 0) { live.splice(i, 1); }
+      }, RIP_BORN);
+    }
+    document.addEventListener('pointerdown', function (ev) {
+      try {
+        if (reduced()) { return; }
+        var t = ev.target;
+        if (t && t.closest && t.closest('.board')) { return; }
+        var now = Date.now();
+        if (now - lastAt < 150) { return; }
+        lastAt = now;
+        makeRipple(ev.clientX || 0, ev.clientY || 0);
+      } catch (e) { /* 装饰失败不影响游戏 */ }
+    }, { passive: true });
+  })();
+
+  /* iOS Safari：页面需要持续存在 touch 监听器，:active 才会触发。
+   * 必须是常驻监听（不能 once），且 passive 不阻塞滚动。 */
+  try {
+    document.addEventListener('touchstart', function () {}, { passive: true });
+  } catch (e) {}
+
   initMotionPref();
   initSoundPref();
   try {
