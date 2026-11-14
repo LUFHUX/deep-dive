@@ -211,6 +211,50 @@
       if (window.DeepDiveAudio && window.DeepDiveAudio.play) { window.DeepDiveAudio.play(name); }
     } catch (e) { /* 静默 */ }
   }
+  /* ---------- 心跳（氧气的听觉预警） ---------- */
+  var _heartTimer = null;
+  var _heartLastDelay = 0;
+  var _heartTier = 'none';
+  function stopHeart() {
+    if (_heartTimer) { clearTimeout(_heartTimer); _heartTimer = null; }
+  }
+  function scheduleHeart(delayMs) {
+    stopHeart();
+    _heartLastDelay = delayMs;
+    _heartTimer = setTimeout(function () {
+      playSfx('heart');
+      scheduleHeart(delayMs);          /* 下一拍 */
+    }, delayMs);
+  }
+  function oxygenTier() {
+    try {
+      if (!state || !state.cfg || phase !== 'playing') { return 'none'; }
+      if (state.status && state.status !== L.PLAYING) { return 'none'; }
+      var dmg = state.cfg.mineCost || 1;
+      if (state.oxygen <= dmg) { return 'danger'; }
+      if (state.oxygen <= dmg * 2) { return 'warn'; }
+      return 'safe';
+    } catch (e) { return 'none'; }
+  }
+  function evaluateHeart() {
+    try {
+      var tut = document.body && document.body.classList && document.body.classList.contains('tut-on');
+      var sound = !(window.DeepDiveAudio && window.DeepDiveAudio.enabled && !window.DeepDiveAudio.enabled());
+      if (tut || !sound) { stopHeart(); _heartTier = 'none'; return; }
+      var tier = oxygenTier();
+      if (tier === 'safe' || tier === 'none') {
+        stopHeart();
+        _heartTier = tier;
+        return;
+      }
+      /* 档位没变且计时器还在 → 不动它，避免每次点击都把心跳往后推 */
+      if (tier === _heartTier && _heartTimer) { return; }
+      _heartTier = tier;
+      if (tier === 'danger') { scheduleHeart(3000 + Math.random() * 1000); }
+      else { scheduleHeart(6000 + Math.random() * 2000); }
+    } catch (e) { stopHeart(); _heartTier = 'none'; }
+  }
+
   function soundOn() {
     try { return !!(window.DeepDiveAudio && window.DeepDiveAudio.enabled()); } catch (e) { return false; }
   }
@@ -227,6 +271,7 @@
   function toggleSoundPref() {
     var next = !soundOn();
     applySound(next);
+    evaluateHeart();
     try { if (window.localStorage) { window.localStorage.setItem(SOUND_KEY, next ? '1' : '0'); } } catch (e) {}
   }
 
@@ -392,14 +437,8 @@
     function makeRipple(x, y) {
       var host = document.getElementById('ripple-layer');
       if (!host) { return; }
-      /* 首页有独立的不透明层（z60），涟漪在首页时必须抬到它上面；
-       * 进游戏后回到 z0，位于棋盘/内容之下。 */
-      var home = document.getElementById('home-layer');
-      var onHome = false;
-      try {
-        onHome = !!home && !home.hidden && home.getClientRects().length > 0;
-      } catch (e) { onHome = false; }
-      host.style.zIndex = onHome ? '61' : '0';
+      /* 涟漪在所有面板之上（96），toast 是 120，仍在它上面 */
+      host.style.zIndex = '96';
       var size = 90 + Math.random() * 40;         /* 直径 90–130 */
       var d = document.createElement('div');
       d.className = 'ripple';
@@ -434,6 +473,16 @@
   try {
     document.addEventListener('touchstart', function () {}, { passive: true });
   } catch (e) {}
+
+  if (DIVE_DEBUG) {
+    window.__ddHeart = {
+      tier: oxygenTier,
+      evaluate: evaluateHeart,
+      stop: stopHeart,
+      setOxy: function (v) { try { if (state) { state.oxygen = v; run.oxygen = v; evaluateHeart(); } } catch (e) {} },
+      info: function () { return { delay: Math.round(_heartLastDelay), active: !!_heartTimer }; }
+    };
+  }
 
   initMotionPref();
   initSoundPref();
@@ -481,6 +530,7 @@
 
   /* 结算展示：通关 / 失败共用一套行定义，真实流程和 ?win=1 / ?lose=1 都走这里 */
   function showResultWin() {
+    stopHeart();
     playSfx(badgeKind(run) === 'perfect' ? 'win-perfect' : 'win');
     DeepDiveResult.show({
       skin: 'win',
@@ -507,6 +557,7 @@
   }
 
   function showResultLose(depth) {
+    stopHeart();
     playSfx('lose');
     run.activeMs = activeTotal();   /* 用时用真实活跃时长，别拿旧值 */
     var d = depth || run.depth;
@@ -653,6 +704,7 @@
     paintBackground();   /* 背景只在进层时生成一次，不在 render 里 */
       var restoredMods = DeepDiveModifiers.short(run.mods);
       U.setMods(restoredMods);
+      evaluateHeart();
       return;
     }
 
@@ -684,6 +736,7 @@
     paintBackground();   /* 新铺一层：背景也只在这里生成一次 */
     if (run.depth >= 100) { U.showBanner('第 100 层', '撞上一次礁，就结束了', 2500, 'final'); }
     saveRun();
+    evaluateHeart();
   }
 
   function newDive() {
@@ -707,6 +760,7 @@
 
   /* 失败结算（复活次数用完后 / 认输） */
   function finishLose() {
+    stopHeart();
     playSfx('lose');
     phase = 'ended';
     var best = R.isNewRecord(records, run);
@@ -1328,6 +1382,7 @@
     if (!wasPractice) { tryAutoClear(); }
     U.render(state);
     U.playEvents(res.events);
+    evaluateHeart();
     /* 音效：瓶子 > 撞礁 > 开格（门本身不出声） */
     (function () {
       var hasBottle = false, hasMine = false, hasDoor = false;
@@ -1538,6 +1593,7 @@
     if (!state || phase !== 'playing') { return; }
     if (!state.doorOpened) { return; }
     dropKey(SAVE_LEVEL);
+    stopHeart();
     var wasLayer100 = (run.depth >= 100);
     if (!wasLayer100) { playSfx('dive'); }
     run = R.dive(run, state);

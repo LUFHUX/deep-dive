@@ -23,11 +23,12 @@ window.DeepDiveAudio = (function () {
     dive: 'sfx-dive.mp3',
     win: 'sfx-win.mp3',
     'win-perfect': 'sfx-win-perfect.mp3',
-    lose: 'sfx-lose.mp3'
+    lose: 'sfx-lose.mp3',
+    heart: 'sfx-heart.mp3'
   };
   var VOL = {
     open: -18, bottle: -12, mine: -8, reveal: -12,
-    dive: -14, win: -12, 'win-perfect': -10, lose: -12
+    dive: -14, win: -12, 'win-perfect': -10, lose: -12, heart: -26
   };
 
   var pool = {};

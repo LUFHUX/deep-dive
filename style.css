@@ -2184,7 +2184,7 @@ body.reduce-motion .hintbar-close:active {
 .ripple-layer {
   position: fixed; inset: 0;
   pointer-events: none;
-  z-index: 0;
+  z-index: 96;   /* 在所有面板之上（toast 120 仍在它上面） */
 }
 .ripple {
   position: absolute;
